@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | TKG and GPC Chain Stock Report (Tray Piece and Owner Hand) {{ currentDateTime }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+
+        .col-md-4{
+            padding: 10px;
+            max-width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #cccccc;
+            padding: 8px;
+            text-align: center !important;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid green;
+            background-color: #d4edda;
+            color: green;
+            border-radius: 5px;
+        }
+
+        .error {
+            border-color: red;
+            background-color: #f8d7da;
+            color: red;
+        }
+
+        .dataTables_length, .dt-buttons {
+            padding: 10px;
+        }
+
+        /* For exporting purpose */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 5mm;
+            }
+
+            table {
+                width: 100% !important;
+                font-size: 9px;
+            }
+
+            th, td {
+                padding: 4px !important;
+                white-space: nowrap;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <script>
+        var test2 = {{rows | safe}};
+    </script>
+    
+    <div class="container mt-5">
+        <h1>TKG and GPC Chain Stock Report (Tray Piece and Owner Hand)</h1>
+        <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+
+        {% load custom_filters %}
+
+        <table id="datatable" class="display">
+            <thead>
+                <tr>
+                    <th rowspan="2">Sub Product</th>
+                    {% for wt in uniqueGrsWt %}
+                        <th colspan="5">{{ wt }}g</th>
+                    {% endfor %}
+                    <th rowspan="2">Grand Total</th>
+                </tr>
+                <tr>
+                    {% for wt in uniqueGrsWt %}
+                        <th>Sale</th>
+                        <th>Tray</th>
+                        <th>Owner</th>
+                        <th>Total</th>
+                        <th>Re-Order</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+        
+            <tbody>
+            {% for sub in uniqueSubProducts %}
+                <tr>
+                    <td>{{ sub }}</td>
+        
+                    {% for wt in uniqueGrsWt %}
+                        {% with cell=matrix|dict_get:sub|dict_get:wt %}
+                            <td></td>
+                            <td>{{ cell.tray }}</td>
+                            <td>{{ cell.owner }}</td>
+                            <td><b>{{ cell.total }}</b></td>
+                            <td></td>
+                        {% endwith %}
+                    {% endfor %}
+        
+                    <td><b>{{ rowGrandTotals|dict_get:sub }}</b></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        
+            <tfoot>
+                <tr style="font-weight:bold;background:#f2f2f2;">
+                    <td>TOTAL</td>
+        
+                    {% for wt in uniqueGrsWt %}
+                        <td></td>
+                        <td>{{ columnTotals|dict_get:wt|dict_get:"tray" }}</td>
+                        <td>{{ columnTotals|dict_get:wt|dict_get:"owner" }}</td>
+                        <td>{{ columnTotals|dict_get:wt|dict_get:"total" }}</td>
+                        <td></td>
+                    {% endfor %}
+        
+                    <td>{{ overallGrandTotal }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <!-- Add jQuery and DataTables script -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+
+    <!-- DataTables core -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- DataTables Buttons extension -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+    <!-- JSZip and pdfmake for Excel and PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        // ~~~~~~~~~~~~~~~~~~~~ Export buttons ~~~~~~~~~~~~~~~~~~~~
+        $(document).ready(function () {
+            $('#datatable').DataTable({
+                scrollX: true,
+                autoWidth: false,
+                dom: '<"top"lfB>rt<"bottom"ip><"clear">',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Excel',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    {
+                        extend: 'print',
+                        orientation: 'landscape',
+                        pageSize: 'A3',
+                        customize: function (win) {
+                            $(win.document.body).css('font-size', '9px');
+                            $(win.document.body).find('table')
+                                .addClass('compact')
+                                .css('width', '100%');
+                        }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: 'PDF',
+                        orientation: 'landscape',
+                        pageSize: 'A3',
+                        exportOptions: {
+                            columns: ':visible'
+                        },
+                        customize: function (doc) {
+                            doc.defaultStyle.fontSize = 8;
+                            doc.styles.tableHeader.fontSize = 9;
+
+                            doc.content[1].layout = {
+                                hLineWidth: function () { return 0.5; },
+                                vLineWidth: function () { return 0.5; },
+                                hLineColor: function () { return '#aaa'; },
+                                vLineColor: function () { return '#aaa'; },
+                                paddingLeft: function () { return 3; },
+                                paddingRight: function () { return 3; }
+                            };
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

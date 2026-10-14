@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Employee - Time Sheet Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        :root { --ink:#173047; --muted:#6e8293; --line:#dce8e9; --teal:#087f83; --teal-dark:#08666b; --canvas:#f1f7f6; }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; padding:0 0 44px; background:var(--canvas); color:var(--ink); font-family:Inter,"Segoe UI",Arial,sans-serif; }
+        .employee-shell { width:min(1050px,calc(100% - 36px)); margin:0 auto; }
+        .employee-hero { position:relative; overflow:hidden; background:radial-gradient(ellipse at 86% 4%,#23676e 0,transparent 38%),linear-gradient(120deg,#14293e,#16434b 68%,#17666a); color:#fff; }
+        .employee-header { padding:25px 0 82px; }
+        .employee-heading { display:flex; justify-content:space-between; align-items:end; gap:25px; }
+        .employee-eyebrow { margin:0 0 8px; color:var(--teal); font-size:11px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+        .employee-heading h1 { margin:0; color:#fff; font-size:clamp(30px,4vw,43px); font-weight:750; letter-spacing:-.04em; }
+        .employee-heading p { margin:8px 0 0; color:#d1e4e8; }
+        .employee-heading .employee-eyebrow { color:#7bd2c8; }
+        .last-updated-card { min-width:205px; padding:13px 16px; border:1px solid var(--line); border-radius:12px; background:#fff; box-shadow:0 5px 16px #12324408; }
+        .last-updated-card strong { display:block; margin-bottom:4px; color:var(--muted); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+        .last-updated-card span { color:#294b5b; font-size:13px; font-weight:650; }
+        .employee-content { position:relative; margin-top:-57px; padding-bottom:35px; }
+        .forForm { display:block; }
+        #timeSheetForm { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; width:100%; padding:23px; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 14px 35px #1232440c; }
+        #timeSheetForm > br { display:none; }
+        .field-block { min-width:0; margin-bottom:16px !important; }
+        .field-half { grid-column:span 1; }
+        .field-wide, .submitButton { grid-column:1/-1; }
+        #timeSheetForm label strong { color:#365466; font-size:12px; font-weight:700; }
+        #timeSheetForm .form-control { min-height:45px; border-color:#d7e3e5; border-radius:9px; font-size:14px; }
+        #timeSheetForm .form-control:focus { border-color:#58b4ad; box-shadow:0 0 0 .2rem #078b831c; }
+        .select2-container .select2-selection--single { height:45px; border:1px solid #d7e3e5; border-radius:9px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height:43px; color:var(--ink); }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height:43px; }
+        .leave-options { display:flex; flex-wrap:wrap; gap:9px; margin-top:9px; }
+        .leave-choice { display:flex; align-items:center; gap:7px; padding:9px 13px; border:1px solid var(--line); border-radius:9px; background:#f8fbfb; color:#496274; font-size:13px; cursor:pointer; }
+        .leave-choice:has(input:checked) { border-color:#83c9c3; background:#e9f7f5; color:#08666b; }
+        .leave-choice input { margin:0; accent-color:var(--teal); }
+        .submitButton { display:flex; justify-content:flex-end; padding-top:5px; }
+        .submitButton .btn { min-width:170px; padding:11px 24px; border:0; border-radius:9px; background:var(--teal); font-weight:700; }
+        .submitButton .btn:hover { background:var(--teal-dark); }
+        .alert { border-radius:10px; }
+        .employee-footer { color:#8b9da7; text-align:center; font-size:11px; }
+        @media(max-width:620px) {
+            .employee-shell { width:calc(100% - 24px); }
+            .employee-header { padding-top:15px; }
+            .employee-heading { align-items:stretch; flex-direction:column; gap:16px; }
+            .last-updated-card { width:100%; }
+            #timeSheetForm { grid-template-columns:1fr; padding:17px; gap:0; }
+            .field-half,.field-wide,.submitButton { grid-column:1; }
+            .submitButton .btn { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="employee-hero">
+        <header class="employee-shell employee-header">
+            <div class="employee-heading">
+                <div>
+                    <p class="employee-eyebrow">Office tools · Time tracking</p>
+                    <h1>Time Sheet</h1>
+                    <p>Record your work hours or leave for the selected day.</p>
+                </div>
+                <div class="last-updated-card"><strong>Last updated</strong><span id="lastUpdated">--</span></div>
+            </div>
+        </header>
+    </div>
+    <main class="employee-shell employee-content">
+    <!-- SUCCESS -->
+    <div id="success-flash-message" class="alert alert-success" style="display:none;">
+        Time Sheet Updated Successfully
+        <i class="fa-solid fa-circle-check"></i>
+    </div>
+
+    <!-- FAILED -->
+    <div id="failed-flash-message" class="alert alert-danger" style="display:none;">
+        Time Sheet Update Failed
+        <i class="fa-solid fa-circle-xmark"></i>
+    </div>
+
+
+    <!-- OVERLAP -->
+    <div id="overlap-flash-message" class="alert alert-warning" style="display:none;">
+        Time overlap detected for you on this date.
+        Don't cheat!!!
+        <i class="fa-solid fa-circle-check"></i>
+    </div>
+
+    <!-- FUTURE TIME -->
+    <div id="time-flash-message" class="alert alert-warning" style="display:none;">
+        Date and To Time cannot be in the future.
+        Don't cheat!!!
+        <i class="fa-solid fa-circle-check"></i>
+    </div>
+
+    <div class="forForm">
+        <form id="timeSheetForm">
+            {% csrf_token %}
+            <!-- DATE -->
+            <div class="mb-3 field-block field-half">
+                <label for="date"><strong>Date</strong></label>
+                <input type="date" id="date" class="form-control" required>
+            </div>
+
+            <!-- EMPLOYEE -->
+            <div class="mb-3 field-block field-half">
+                <label for="employee"><strong>Employee Name</strong></label>
+                <select id="employee" class="form-control" required>
+                    <option value="">
+                        Select Employee Name
+                    </option>
+                    <option value="Chitra">Chitra</option>
+                    <option value="Malliga">Malliga</option>
+                    <option value="Santhosh Kumar">Santhosh Kumar</option>
+                    <option value="Hemalatha">Hemalatha</option>
+                    <option value="Janapriya">Janapriya</option>
+                    <option value="Nandhini">Nandhini</option>
+                    <option value="Saravana Kumar">Saravana Kumar</option>
+                    <option value="Kiruba">Kiruba</option>
+                    <option value="Ramya">Ramya</option>
+                    <option value="Kathirvel">Kathirvel</option>
+                    <option value="Devathai">Devathai</option>
+                    <option value="Vinoth Kumar">Vinoth Kumar</option>
+                    <option value="Sruthiya">Sruthiya</option>
+                    <option value="Lavanya">Lavanya</option>
+                    <option value="Kadhiravan">Kadhiravan</option>
+                    <option value="Akila">Akila</option>
+                    <option value="Nadhiya">Nadhiya</option>
+                </select>
+            </div>
+
+            <!-- LEAVE -->
+            <div class="mb-3 field-block field-wide">
+                <label><strong>Leave</strong></label>
+                <div class="leave-options">
+                <label class="leave-choice" for="none">
+                    <input class="form-check-input leaveType" type="radio" name="leaveType" id="none" value="None" checked>
+                    None
+                </label>
+
+                <label class="leave-choice" for="halfDay">
+                    <input class="form-check-input leaveType" type="radio" name="leaveType" id="halfDay" value="Half Day">
+                    Half Day
+                </label>
+
+                <label class="leave-choice" for="fullDay">
+                    <input class="form-check-input leaveType" type="radio" name="leaveType" id="fullDay" value="Full Day">
+                    Full Day
+                </label>
+                </div>
+            </div>
+
+            <!-- FROM TIME -->
+            <div class="mb-3 field-block field-half" id="fromTimeDiv">
+                <label for="fromTime"><strong>From Time</strong></label>
+                <input type="time" id="fromTime" class="form-control" required>
+            </div>
+
+            <!-- TO TIME -->
+            <div class="mb-3 field-block field-half" id="toTimeDiv">
+                <label for="toTime"><strong>To Time</strong></label>
+                <input type="time" id="toTime" class="form-control" required>
+            </div>
+
+            <!-- WORK -->
+            <div class="mb-3 field-block field-wide" id="workDiv">
+                <label for="work"><strong>Work Description</strong></label>
+                <textarea id="work" class="form-control" rows="4" placeholder="Work Description" required></textarea>
+            </div>
+
+            <!-- SAVE -->
+            <div class="submitButton">
+                <button type="submit" class="btn btn-primary">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+    </main>
+    <footer class="employee-shell employee-footer">Designed &amp; Developed by Pavithran</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // =========================================================
+            // Django URL
+            // =========================================================
+            const djangoURL = "{% url 'employeeTimeSheetApi' %}";
+
+            // =========================================================
+            // CSRF TOKEN
+            // =========================================================
+            const csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+
+            // =========================================================
+            // Set Today's Date
+            // =========================================================
+            let now = new Date();
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, "0");
+            let day = String(now.getDate()).padStart(2, "0");
+            let today = year + "-" + month + "-" + day;
+            $("#date").val(today);
+
+            // =========================================================
+            // Select2
+            // =========================================================
+            $("#employee").select2({
+                placeholder: "Search Employee Name",
+                allowClear: true,
+                width: "100%"
+            });
+
+            // =========================================================
+            // Last Updated
+            // =========================================================
+            $("#employee").change(function () {
+                let employee = $("#employee").val();
+                if (employee == "") {
+                    $("#lastUpdated").text("--");
+                    return;
+                }
+
+                /*
+                 * OLD:
+                 *
+                 * Google Apps Script URL
+                 *
+                 * NEW:
+                 *
+                 * Django URL
+                 */
+
+                $.ajax({
+                    url: djangoURL,
+                    type: "GET",
+                    data: {
+                        action: "lastUpdate",
+                        employee: employee
+                    },
+                    success: function (res) {
+                        if (res.status === "success") {
+                            let text = res.date;
+                            if (res.leaveType === "Full Day") {
+                                text += " (Full Day Leave)";
+                            } else if (res.toTime) {
+                                text += " " + res.toTime;
+                            }
+                            $("#lastUpdated").text(text);
+                        } else {
+                            $("#lastUpdated").text("--");
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                        $("#lastUpdated").text("--");
+                    }
+                });
+            });
+
+            // =========================================================
+            // Show / Hide Controls
+            // =========================================================
+            function updateLeaveUI() {
+                let leaveType = $("input[name='leaveType']:checked").val();
+
+                // -----------------------------------------------------
+                // FULL DAY
+                // -----------------------------------------------------
+                if (leaveType === "Full Day") {
+                    $("#fromTimeDiv").hide();
+                    $("#toTimeDiv").hide();
+                    $("#workDiv").hide();
+                    $("#fromTime").prop("required", false);
+                    $("#toTime").prop("required", false);
+                    $("#work").prop("required", false);
+                }
+
+                // -----------------------------------------------------
+                // HALF DAY
+                // -----------------------------------------------------
+                else if (leaveType === "Half Day") {
+                    $("#fromTimeDiv").show();
+                    $("#toTimeDiv").show();
+                    $("#workDiv").hide();
+                    $("#fromTime").prop("required", true);
+                    $("#toTime").prop("required", true);
+                    $("#work").prop("required", false);
+                }
+
+                // -----------------------------------------------------
+                // NONE
+                // -----------------------------------------------------
+                else {
+                    $("#fromTimeDiv").show();
+                    $("#toTimeDiv").show();
+                    $("#workDiv").show();
+                    $("#fromTime").prop("required", true);
+                    $("#toTime").prop("required", true);
+                    $("#work").prop("required", true);
+                }
+            }
+            updateLeaveUI();
+
+            $(".leaveType").change(function () {
+                updateLeaveUI();
+            });
+
+            // =========================================================
+            // Save Time Sheet
+            // =========================================================
+            function saveTimeSheet(data) {
+                $.ajax({
+                    url: djangoURL,
+                    type: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    data: data,
+                    success: function (res) {
+                        if (res.status === "success") {
+                            $("#success-flash-message").show();
+                            setTimeout(function () {
+                                location.reload();
+                            }, 2000);
+                        } else if (res.status === "overlap") {
+                            $("#overlap-flash-message").show();
+                            setTimeout(function () {
+                                location.reload();
+                            }, 3000);
+                        } else if (res.status === "future") {
+                            $("#time-flash-message").show();
+                            setTimeout(function () {
+                                location.reload();
+                            }, 3000);
+                        } else if (res.status === "invalid") {
+                            alert(res.message);
+                        } else {
+                            $("#failed-flash-message").show();
+                            setTimeout(function () {
+                                location.reload();
+                            }, 3000);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(xhr);
+                        console.log(status);
+                        console.log(error);
+                        alert(error);
+                    }
+                });
+            }
+
+            // =========================================================
+            // Submit
+            // =========================================================
+            $("#timeSheetForm").submit(function (e) {
+                e.preventDefault();
+                let leaveType = $("input[name='leaveType']:checked").val();
+                let selectedDate = $("#date").val();
+                let today = new Date();
+                let todayString = today.getFullYear() + "-" +
+                    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+                    String(today.getDate()).padStart(2, "0");
+
+                if (selectedDate > todayString) {
+                    $("#time-flash-message").show();
+                    setTimeout(function () {
+                        location.reload();
+                    }, 3000);
+                    return;
+                }
+
+                // =====================================================
+                // FULL DAY LEAVE
+                // =====================================================
+                if (leaveType === "Full Day") {
+                    let data = {
+                        date: $("#date").val(),
+                        employee: $("#employee").val(),
+                        leaveType: leaveType,
+                        work: "",
+                        fromTime: "",
+                        toTime: "",
+                        totalHours: "00:00"
+                    };
+                    saveTimeSheet(data);
+                    return;
+                }
+
+                // =====================================================
+                // Read Time
+                // =====================================================
+                let fromTime = $("#fromTime").val();
+                let toTime = $("#toTime").val();
+
+                // =====================================================
+                // Today's Validation
+                // =====================================================
+                let currentTime = new Date();
+                let currentYear = currentTime.getFullYear();
+                let currentMonth = String(currentTime.getMonth() + 1).padStart(2, "0");
+                let currentDay = String(currentTime.getDate()).padStart(2, "0");
+                let currentDate = currentYear + "-" + currentMonth + "-" + currentDay;
+
+                if (selectedDate === currentDate) {
+                    let currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+                    let toParts = toTime.split(":");
+                    let toMinutes = parseInt(toParts[0]) * 60 + parseInt(toParts[1]);
+
+                    if (toMinutes > currentMinutes) {
+                        $("#time-flash-message").show();
+                        setTimeout(function () {
+                            location.reload();
+                        }, 3000);
+                        return;
+                    }
+                }
+
+                // =====================================================
+                // Calculate Hours
+                // =====================================================
+                let fromParts = fromTime.split(":");
+                let toParts = toTime.split(":");
+                let fromMinutes = parseInt(fromParts[0]) * 60 + parseInt(fromParts[1]);
+                let toMinutes = parseInt(toParts[0]) * 60 + parseInt(toParts[1]);
+                let diff = toMinutes - fromMinutes;
+
+                if (diff < 0) {
+                    diff += 24 * 60;
+                }
+
+                let hrs = Math.floor(diff / 60);
+                let mins = diff % 60;
+                let totalHours = String(hrs).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
+
+                // =====================================================
+                // Prepare Data
+                // =====================================================
+                let data = {
+                    date: $("#date").val(),
+                    employee: $("#employee").val(),
+                    leaveType: leaveType,
+                    work:
+                        leaveType === "Half Day"
+                            ? ""
+                            : $("#work").val(),
+                    fromTime: fromTime,
+                    toTime: toTime,
+                    totalHours: totalHours
+                };
+
+                // =====================================================
+                // Send to Django
+                // =====================================================
+                saveTimeSheet(data);
+            });
+        });
+    </script>
+</body>
+</html>

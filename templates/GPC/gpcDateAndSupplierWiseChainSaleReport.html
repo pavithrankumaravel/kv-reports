@@ -1,0 +1,187 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | GPC Date and Supplier Wise Chain Sale Report ( {{ currentDateTime }} )</title>
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/css/bootstrap-multiselect.css">
+
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        table { width: 100%; margin-top: 20px; }
+        table, thead, th, td { border: 1px solid #cccccc; padding: 8px; text-align: center !important; }
+        th { background-color: #f2f2f2; }
+        tfoot th { background-color: #e6e6e6; font-weight: bold; }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+
+<body class="p-4">
+    <a class="report-dashboard-link" href="{% url 'home' %}"><span aria-hidden="true">←</span> Main dashboard</a>
+
+    <script>
+        var test2 = {{tableData | safe}};
+    </script>
+
+    <div class="container-fluid mt-4">
+        <h3>GPC Date and Supplier Wise Chain Sale Report</h3>
+        <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+      
+        <form method="get" id="filterForm">
+            <div class="row mb-3">
+        
+                <!-- Start Date -->
+                <div class="col-md-2">
+                    <label>Start Date:</label>
+                    <input type="date" name="start_date" class="form-control"
+                        value="{{ startDate|default_if_none:'' }}"
+                        onchange="this.form.submit()">
+                </div>
+        
+                <!-- End Date -->
+                <div class="col-md-2">
+                    <label>End Date:</label>
+                    <input type="date" name="end_date" class="form-control"
+                        value="{{ endDate|default_if_none:'' }}"
+                        onchange="this.form.submit()">
+                </div>
+        
+                <!-- Supplier -->
+                <div class="col-md-3">
+                    <label>Supplier / Asari:</label>
+                    <select name="supplier" id="supplierFilter"
+                        class="form-control"
+                        onchange="this.form.submit()"
+                        {% if not startDate or not endDate %}disabled{% endif %}>
+
+                        <option value="ALL" {% if selectedSupplier == "ALL" %}selected{% endif %}>
+                            ALL
+                        </option>
+
+                        {% for s in uniqueSuppliers %}
+                            <option value="{{ s }}"
+                                {% if s == selectedSupplier %}selected{% endif %}>
+                                {{ s }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- <div class="col-md-2" style="text-align: center;">
+                    <button type="submit" class="btn btn-primary">
+                        Submit
+                    </button>
+                </div> -->
+            </div>
+        </form>        
+
+        <!-- TABLE SECTION -->
+        {% if showTable %}
+        <div class="mt-4">
+            <table class="table" id="datatable">
+                <thead>
+                    <tr>
+                        <th>Sub Product</th>
+                        {% for gw in uniqueGrsWt %}
+                            <th>{{ gw }} g</th>
+                        {% endfor %}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in tableData %}
+                    <tr>
+                        <td>{{ row.sub }}</td>
+                        {% for v in row.values %}
+                            <td>{% if v %}{{ v }}{% endif %}</td>
+                        {% endfor %}
+                        <th class="table-secondary">{{ row.total }}</th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                
+                {% if totalRow %}
+                <tfoot>
+                    <tr>
+                        <th>{{ totalRow.sub }}</th>
+                        {% for v in totalRow.values %}
+                            <th>{{ v }}</th>
+                        {% endfor %}
+                        <th>{{ totalRow.total }}</th>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/js/bootstrap-multiselect.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        // Initialize DataTable
+        $(document).ready(function () {
+            if ($('#datatable').length) {
+                $('#datatable').DataTable({
+                    dom: '<"top"lfB>rt<"bottom"ip><"clear">',
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            footer: true,
+                            title: 'GPC Date and Supplier Wise Sale Report'
+                        },
+                        {
+                            extend: 'print',
+                            footer: true,
+                            title: 'GPC Date and Supplier Wise Sale Report'
+                        }
+                    ]
+                });
+            }
+
+            $('#supplierFilter').multiselect({
+                enableFiltering: true,
+                enableCaseInsensitiveFiltering: true,
+                buttonWidth: '100%',
+                maxHeight: 300,
+                nonSelectedText: 'Select Supplier / Asari',
+                filterPlaceholder: 'Search Supplier',
+                numberDisplayed: 1,
+                multiple: false
+            });
+        });
+    </script>
+
+    {% if not showTable %}
+    <script>
+        window.addEventListener('load', function () {
+            if (window.location.search) {
+                const url = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, url);
+            }
+        });
+    </script>
+    {% endif %}
+
+</body>
+</html>

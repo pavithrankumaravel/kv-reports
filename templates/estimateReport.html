@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | {{ reportTitle }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --ink:#1d2a3b; --muted:#738092; --line:#e5e8ed; --accent:#b58127;
+            --accent-dark:#8b611a; --accent-soft:#fbf8f0; --accent-tint:#f8f6f1;
+            --accent-border:#e7dfce; --accent-text:#6c5c3e; --canvas:#f5f3ef;
+        }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; background:var(--canvas); color:var(--ink); font-family:Inter,"Segoe UI",Arial,sans-serif; }
+        body.silver-report {
+            --accent:#6d8b9e; --accent-dark:#4a6b7f; --accent-soft:#e8f0f4;
+            --accent-tint:#ecf2f5; --accent-border:#cddce3; --accent-text:#3d5c6e; --canvas:#f0f4f6;
+        }
+        .report-shell { width:min(1320px,calc(100% - 36px)); margin:0 auto; }
+        .report-header { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; padding:30px 0 25px; }
+        .report-kicker { margin:0 0 8px; color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.17em; text-transform:uppercase; }
+        .report-header h1 { margin:0; color:var(--ink); font-size:38px; font-weight:750; line-height:1.15; }
+        .report-subtitle { margin:8px 0 0; color:var(--muted); font-size:14px; }
+        .report-clock { flex:0 0 auto; padding:10px 13px; border:1px solid var(--accent-border); border-radius:10px; background:#fffdfa; color:var(--accent-text); font-size:12px; font-weight:650; }
+        .report-card { margin-bottom:30px; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 12px 35px #352b190d; }
+        .report-card-heading { display:flex; align-items:center; gap:15px; padding:17px 22px; border-bottom:1px solid var(--line); background:linear-gradient(110deg,#fffdf8,var(--accent-soft)); }
+        .report-card-heading h2 { margin:0; font-size:16px; font-weight:750; }
+        .report-card-heading p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+        .report-card-body { padding:20px 22px 22px; }
+        .report-toolbar { display:grid; grid-template-columns:minmax(250px,1fr) minmax(250px,1fr) auto minmax(170px,1fr); align-items:end; gap:14px; margin-bottom:20px; }
+        .filter-range { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .filter-field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .filter-field input { width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; }
+        .filter-field input:focus { outline:0; border-color:var(--accent); box-shadow:0 0 0 .2rem color-mix(in srgb,var(--accent) 12%,transparent); }
+        .filter-actions { display:flex; gap:9px; }
+        .filter-actions button { min-height:43px; padding:10px 15px; border:1px solid transparent; border-radius:8px; font-size:13px; font-weight:750; white-space:nowrap; cursor:pointer; }
+        #searchButton { background:var(--accent); color:#fff; }
+        #searchButton:hover { background:var(--accent-dark); }
+        #clearButton { border-color:#d9dfe6; background:#fff; color:#465266; }
+        #clearButton:hover { background:#f5f6f8; }
+        .report-status { min-height:18px; color:var(--muted); font-size:12px; text-align:right; }
+        .report-status.is-error { color:#b42318; }
+        .table-wrap { overflow-x:auto; }
+        #estimateTable { width:100% !important; border-collapse:collapse !important; }
+        #estimateTable th, #estimateTable td { white-space:nowrap; vertical-align:middle; }
+        #estimateTable thead th { padding:11px 12px; border-bottom:1px solid var(--line); background:var(--accent-soft); color:#465266; font-size:12px; }
+        #estimateTable tbody td { padding:10px 12px; font-size:13px; }
+        #estimateTable tbody tr:hover { background:#fcfaf6; }
+        #estimateTable .edit-entry { border-color:var(--accent-border); color:var(--accent-dark); }
+        .totals-heading { margin:22px 0 10px; color:var(--ink); font-size:14px; font-weight:750; }
+        #totalsTable { margin:0; }
+        #totalsTable th { background:var(--accent-soft); color:#465266; font-size:12px; }
+        #totalsTable td { color:var(--accent-text); font-size:13px; font-weight:700; }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { margin-bottom:12px; color:var(--muted); font-size:12px; }
+        .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select { min-height:34px; padding:5px 8px; border:1px solid #dce2e8; border-radius:7px; background:#fff; color:var(--ink); }
+        .dataTables_wrapper .dt-buttons { display:inline-flex; gap:7px; margin-left:12px; }
+        .dataTables_wrapper .dt-button { padding:7px 12px !important; border:1px solid var(--accent-border) !important; border-radius:7px !important; background:#fff !important; color:var(--accent-dark) !important; font-size:12px !important; font-weight:700 !important; }
+        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { margin-top:10px; color:var(--muted); font-size:12px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { border-color:var(--accent-border) !important; background:var(--accent-soft) !important; color:var(--accent-dark) !important; }
+        .report-footer { padding:0 0 20px; color:#8d929a; text-align:center; font-size:11px; }
+        .edit-dialog { width:min(900px,96vw); max-height:90vh; padding:0; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 24px 70px #10182740; }
+        .edit-dialog::backdrop { background:#15203380; backdrop-filter:blur(3px); }
+        .edit-form { padding:24px; }
+        .edit-form h2 { color:var(--ink); font-size:19px; font-weight:750; }
+        .edit-form .form-label { color:#465266; font-size:12px; font-weight:700; }
+        .edit-form .form-control, .edit-form .form-select { min-height:42px; border-color:#dce2e8; border-radius:8px; }
+        .edit-form .form-control:focus, .edit-form .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 .2rem color-mix(in srgb,var(--accent) 12%,transparent); }
+        .edit-form button { min-height:40px; border-radius:8px; font-size:13px; font-weight:700; }
+        .edit-form button[type="submit"] { border-color:var(--accent); background:var(--accent); }
+        @media(max-width:1000px) {
+            .report-toolbar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .report-status { align-self:center; text-align:left; }
+        }
+        @media(max-width:620px) {
+            .report-shell { width:calc(100% - 22px); }
+            .report-header { align-items:flex-start; flex-direction:column; gap:12px; padding-top:21px; }
+            .report-header h1 { font-size:32px; }
+            .report-clock { width:100%; }
+            .report-card-heading, .report-card-body { padding:15px; }
+            .report-toolbar { grid-template-columns:1fr; gap:13px; }
+            .filter-actions { display:grid; grid-template-columns:1fr 1fr; }
+            .report-status { text-align:left; }
+            .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { float:none; margin:0 0 10px; text-align:left; }
+            .dataTables_wrapper .dataTables_filter input { max-width:calc(100% - 60px); }
+            .dataTables_wrapper .dt-buttons { margin:0 0 10px; }
+            .edit-form { padding:18px; }
+        }
+    </style>
+</head>
+<body class="{{ reportTheme }}-report">
+    <header class="report-shell report-header">
+        <div>
+            <p class="report-kicker">Office tools · Jewellery estimates</p>
+            <h1>{{ reportTitle }}</h1>
+            <p class="report-subtitle">Review, filter, and manage saved estimates.</p>
+        </div>
+        <div class="report-clock"><span>Current time</span> · <time id="reportClock"></time></div>
+    </header>
+    <main class="report-shell">
+        <section class="report-card">
+            <div class="report-card-heading"><div><h2>Estimate records</h2><p>Filter by date and time, then export, edit, or print.</p></div></div>
+            <div class="report-card-body">
+                <div class="report-toolbar" role="search">
+                    <div class="filter-range">
+                        <div class="filter-field"><label for="fromDate">From Date</label><input type="date" id="fromDate"></div>
+                        <div class="filter-field"><label for="fromTime">From Time</label><input type="time" id="fromTime" step="1"></div>
+                    </div>
+                    <div class="filter-range">
+                        <div class="filter-field"><label for="toDate">To Date</label><input type="date" id="toDate"></div>
+                        <div class="filter-field"><label for="toTime">To Time</label><input type="time" id="toTime" step="1"></div>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="button" id="searchButton">Search</button>
+                        <button type="button" id="clearButton">Clear Filters</button>
+                    </div>
+                    <div class="report-status" id="reportStatus" role="status" aria-live="polite"></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="table table-striped table-bordered w-100" id="estimateTable">
+                    <thead><tr id="tableHeader"></tr></thead>
+                    <tbody></tbody>
+                    </table>
+                </div>
+                {% if totalColumns %}
+                <h2 class="totals-heading">Totals</h2>
+                <div class="table-wrap">
+                    <table class="table table-bordered w-100 mb-0" id="totalsTable">
+                        <thead><tr id="totalsHeader"></tr></thead>
+                        <tbody><tr id="totalsRow"></tr></tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+    <footer class="report-shell report-footer">Designed &amp; Developed by Pavithran</footer>
+
+    <dialog id="editDialog" class="edit-dialog">
+        <form id="editForm" class="edit-form">
+            {% csrf_token %}
+            <input type="hidden" id="editId">
+            <h2 class="h4 mb-3">Edit Estimate</h2>
+            <div id="editFields" class="row g-3"></div>
+            <div id="editError" class="text-danger mt-3" role="alert"></div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </dialog>
+
+    {{ apiUrl|json_script:"estimate-api-url" }}
+    {{ columns|json_script:"estimate-columns" }}
+    {{ editFields|json_script:"estimate-edit-fields" }}
+    {{ totalColumns|json_script:"estimate-total-columns" }}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        const apiUrl = JSON.parse(document.getElementById("estimate-api-url").textContent);
+        const columns = JSON.parse(document.getElementById("estimate-columns").textContent);
+        const editFields = JSON.parse(document.getElementById("estimate-edit-fields").textContent);
+        const totalColumns = JSON.parse(document.getElementById("estimate-total-columns").textContent);
+        const header = document.getElementById("tableHeader");
+        columns.forEach(column => {
+            const th = document.createElement("th");
+            th.textContent = column.label;
+            header.appendChild(th);
+        });
+        if (totalColumns.length) {
+            const totalsHeader = document.getElementById("totalsHeader");
+            const totalsRow = document.getElementById("totalsRow");
+            totalColumns.forEach(column => {
+                const th = document.createElement("th");
+                th.textContent = column.label;
+                totalsHeader.appendChild(th);
+                const td = document.createElement("td");
+                td.dataset.totalKey = column.key;
+                totalsRow.appendChild(td);
+            });
+        }
+
+        const table = $("#estimateTable").DataTable({
+            scrollX: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [],
+            columnDefs: [{targets: columns.length - 1, orderable: false, searchable: false}],
+            dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+            buttons: [
+                {extend: "excelHtml5", text: "Excel", exportOptions: {columns: ":not(:last-child)"}},
+                {extend: "print", text: "Print", exportOptions: {columns: ":not(:last-child)"}}
+            ]
+        });
+
+        const status = document.getElementById("reportStatus");
+        const recordsById = new Map();
+        const csrfToken = document.querySelector("#editForm [name=csrfmiddlewaretoken]").value;
+        function showStatus(message, isError = false) {
+            status.textContent = message;
+            status.className = isError ? "report-status is-error" : "report-status";
+        }
+        function updateReportClock() {
+            document.getElementById("reportClock").textContent = new Date().toLocaleString();
+        }
+        updateReportClock();
+        setInterval(updateReportClock, 1000);
+        function escapeCell(value) {
+            return String(value ?? "").replace(/[&<>"']/g, character => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            })[character]);
+        }
+        async function loadReport() {
+            const fromDate = document.getElementById("fromDate").value;
+            const fromTime = document.getElementById("fromTime").value;
+            const toDate = document.getElementById("toDate").value;
+            const toTime = document.getElementById("toTime").value;
+            if (fromTime && !fromDate) {
+                showStatus("Select From Date when using From Time.", true);
+                return;
+            }
+            if (toTime && !toDate) {
+                showStatus("Select To Date when using To Time.", true);
+                return;
+            }
+            if (fromDate && toDate && (fromDate > toDate ||
+                (fromDate === toDate && (fromTime || "00:00:00") > (toTime || "23:59:59")))) {
+                showStatus("From Date/Time must be on or before To Date/Time.", true);
+                return;
+            }
+            const query = new URLSearchParams();
+            if (fromDate) query.set("fromDate", fromDate);
+            if (fromTime) query.set("fromTime", fromTime);
+            if (toDate) query.set("toDate", toDate);
+            if (toTime) query.set("toTime", toTime);
+            showStatus("Loading report…");
+            try {
+                const response = await fetch(`${apiUrl}?${query}`, {headers: {"Accept": "application/json"}});
+                const raw = await response.text();
+                let payload;
+                try { payload = raw ? JSON.parse(raw) : {}; }
+                catch (_) { throw new Error(`Unexpected server response (HTTP ${response.status}). Check the Django server log.`); }
+                if (!response.ok) throw new Error(payload.detail || JSON.stringify(payload));
+                table.clear();
+                recordsById.clear();
+                if (totalColumns.length) {
+                    totalColumns.forEach(column => {
+                        const sum = payload.results.reduce((total, record) => {
+                            const rawValue = record[column.key];
+                            if (column.numericOnly && (rawValue == null || String(rawValue).trim() === "")) return total;
+                            const value = Number(rawValue);
+                            return Number.isFinite(value) ? total + value : total;
+                        }, 0);
+                        const decimals = column.decimals ?? 2;
+                        document.querySelector(`#totalsRow [data-total-key="${column.key}"]`).textContent = sum.toFixed(decimals);
+                    });
+                }
+                payload.results.forEach(record => {
+                    recordsById.set(Number(record.id), record);
+                    table.row.add(columns.map(column => column.key === "actions"
+                        ? `<div class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary edit-entry" data-id="${Number(record.id)}">Edit</button> <button type="button" class="btn btn-sm btn-outline-danger delete-entry" data-id="${Number(record.id)}">Delete</button></div>`
+                        : escapeCell(record[column.key])));
+                });
+                table.draw();
+                showStatus(`${payload.results.length} estimate(s) loaded.`);
+            } catch (error) {
+                table.clear().draw();
+                showStatus(error.message, true);
+            }
+        }
+
+        document.getElementById("searchButton").addEventListener("click", loadReport);
+
+        const editDialog = document.getElementById("editDialog");
+        const editFieldsContainer = document.getElementById("editFields");
+        const editError = document.getElementById("editError");
+        function buildEditFields(record) {
+            editFieldsContainer.replaceChildren();
+            editFields.forEach(field => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "col-md-6";
+                const label = document.createElement("label");
+                label.className = "form-label";
+                label.htmlFor = `edit-${field.key}`;
+                label.textContent = field.label;
+                let input;
+                if (field.type === "select") {
+                    input = document.createElement("select");
+                    input.className = "form-select";
+                    const choices = [...field.options];
+                    if (record[field.key] && !choices.includes(record[field.key])) {
+                        choices.push(record[field.key]);
+                    }
+                    choices.forEach(optionValue => {
+                        const option = document.createElement("option");
+                        option.value = optionValue;
+                        option.textContent = optionValue;
+                        input.appendChild(option);
+                    });
+                } else {
+                    input = document.createElement("input");
+                    input.type = field.type;
+                    input.className = "form-control";
+                    if (field.step) input.step = field.step;
+                }
+                input.id = label.htmlFor;
+                input.dataset.fieldKey = field.key;
+                input.value = record[field.key] ?? "";
+                input.required = field.key === "date" || field.key === "time" || field.key === "item";
+                wrapper.append(label, input);
+                editFieldsContainer.appendChild(wrapper);
+            });
+        }
+
+        $("#estimateTable tbody").on("click", ".edit-entry", function () {
+            const id = Number(this.dataset.id);
+            const record = recordsById.get(id);
+            if (!record) return;
+            document.getElementById("editId").value = id;
+            editError.textContent = "";
+            buildEditFields(record);
+            editDialog.showModal();
+        });
+        document.getElementById("cancelEdit").addEventListener("click", () => editDialog.close());
+
+        async function readMutationResponse(response) {
+            const raw = await response.text();
+            let payload;
+            try { payload = raw ? JSON.parse(raw) : {}; }
+            catch (_) { throw new Error(`Unexpected server response (HTTP ${response.status}). Check the Django server log.`); }
+            if (!response.ok) throw new Error(payload.detail || JSON.stringify(payload));
+            return payload;
+        }
+
+        document.getElementById("editForm").addEventListener("submit", async event => {
+            event.preventDefault();
+            const id = Number(document.getElementById("editId").value);
+            const payload = {};
+            editFieldsContainer.querySelectorAll("[data-field-key]").forEach(input => {
+                payload[input.dataset.fieldKey] = input.type === "number" ? (Number(input.value) || 0) : input.value;
+            });
+            const saveButton = event.currentTarget.querySelector("button[type=submit]");
+            saveButton.disabled = true;
+            editError.textContent = "";
+            try {
+                const response = await fetch(`${apiUrl}${id}/`, {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json", "X-CSRFToken": csrfToken, "Accept": "application/json"},
+                    body: JSON.stringify(payload)
+                });
+                await readMutationResponse(response);
+                editDialog.close();
+                await loadReport();
+            } catch (error) {
+                editError.textContent = error.message;
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        $("#estimateTable tbody").on("click", ".delete-entry", async function () {
+            const id = Number(this.dataset.id);
+            if (!id || !window.confirm("Delete this estimate? This cannot be undone.")) return;
+            try {
+                const response = await fetch(`${apiUrl}${id}/`, {
+                    method: "DELETE",
+                    headers: {"X-CSRFToken": csrfToken, "Accept": "application/json"}
+                });
+                await readMutationResponse(response);
+                await loadReport();
+            } catch (error) {
+                showStatus(error.message, true);
+            }
+        });
+
+        document.getElementById("clearButton").addEventListener("click", () => {
+            document.getElementById("fromDate").value = "";
+            document.getElementById("fromTime").value = "";
+            document.getElementById("toDate").value = "";
+            document.getElementById("toTime").value = "";
+            loadReport();
+        });
+        loadReport();
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<style>
+    :root { --report-ink:#17243a; --report-muted:#68758a; --report-line:#e3e9f1; --report-blue:#2463eb; --report-gold:#e8b65a; --report-bg:#f3f6fb; }
+    body { min-height:100vh; background:var(--report-bg) !important; color:var(--report-ink); font-family:Inter,"Segoe UI",Arial,sans-serif !important; }
+    body > .container, body > .container-fluid { max-width:1500px; margin-right:auto; margin-left:auto; }
+    body h1 { position:relative; margin:0 0 24px !important; padding:18px 24px; border:1px solid var(--report-line); border-left:5px solid #148c88; border-radius:12px; background:linear-gradient(110deg,#fff,#f7fafc); box-shadow:0 5px 18px #14243b09; color:var(--report-ink) !important; font-size:clamp(24px,2.8vw,34px); font-weight:700; letter-spacing:-.035em; }
+    body h2:first-child { color:var(--report-ink); font-weight:700; letter-spacing:-.025em; }
+    body p { color:var(--report-muted); }
+    body form[method="get"] { padding:16px; border:1px solid var(--report-line); border-radius:12px; background:#fff; box-shadow:0 5px 18px #14243b08; }
+    body input:not([type="checkbox"]):not([type="radio"]), body select, body textarea { border-color:#d8e0eb; border-radius:8px; }
+    body input:focus, body select:focus, body textarea:focus { border-color:#8db0fa; box-shadow:0 0 0 .2rem #2463eb20; }
+    body .btn { border-radius:8px; font-weight:600; }
+    body table:not(.dataTable) { overflow:hidden; border-color:var(--report-line); border-radius:10px; background:#fff; }
+    body table th, body table td { border-color:var(--report-line) !important; }
+    body table thead th, body table thead td { background:#f1f5fb !important; color:#34445d; font-weight:700; }
+    body table tfoot th, body table tfoot td { background:#eaf1ff !important; color:#193d87; font-weight:800; }
+    body table.dataTable { width:100% !important; border-collapse:collapse !important; background:#fff; }
+    body table.dataTable thead th, body table.dataTable thead td { border-bottom:1px solid var(--report-line) !important; background:#f1f5fb !important; color:#34445d; }
+    body table.dataTable tbody td, body table.dataTable tbody th { border-top:1px solid var(--report-line) !important; }
+    body table.dataTable tfoot th, body table.dataTable tfoot td { border-top:1px solid #d8e3f5 !important; background:#eaf1ff !important; color:#193d87; font-weight:800; }
+    body .dataTables_wrapper { color:#536178; }
+    body .dataTables_wrapper .dataTables_length, body .dataTables_wrapper .dataTables_filter, body .dataTables_wrapper .dataTables_info { color:#68758a; font-size:13px; }
+    body .dataTables_wrapper input, body .dataTables_wrapper select { min-height:34px; padding:5px 9px; border:1px solid #d8e0eb; border-radius:7px; background:#fff; }
+    body .dt-buttons .dt-button { margin:0 6px 8px 0 !important; padding:7px 12px !important; border:1px solid #d8e0eb !important; border-radius:7px !important; background:#fff !important; color:#34445d !important; }
+    body .dt-buttons .dt-button:hover { border-color:#b9c9e6 !important; background:#f3f6fc !important; }
+    body .dataTables_wrapper .dataTables_paginate .paginate_button.current { border:1px solid #d7e2f6 !important; border-radius:6px; background:#edf3ff !important; color:#193d87 !important; }
+    .report-dashboard-link { display:flex; width:max-content; align-items:center; gap:7px; margin:0 0 16px; padding:8px 12px; border:1px solid #dce4ef; border-radius:8px; background:#fff; box-shadow:0 4px 14px #14243b08; color:#34445d; font-size:12px; font-weight:600; text-decoration:none; }
+    .report-dashboard-link:hover { border-color:#b9c9e6; background:#f7f9fd; color:var(--report-blue); }
+    @media(max-width:640px) {
+        body { padding:14px !important; }
+        body > .container, body > .container-fluid { width:100%; padding-right:0; padding-left:0; }
+        body h1 { margin-bottom:18px !important; padding:16px 18px; }
+        body table { display:block; max-width:100%; overflow-x:auto; }
+        body table.dataTable { display:table; }
+        body form[method="get"] { padding:12px; }
+        .report-dashboard-link { margin-bottom:12px; }
+    }
+</style>

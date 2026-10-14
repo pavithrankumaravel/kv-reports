@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | GPC Owner Hand Product Wise Stock Report {{ currentDateTime }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+    <style>
+        body { padding: 30px; font-family: Arial, sans-serif; }
+        table { width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+<body>
+    <a class="report-dashboard-link" href="{% url 'home' %}"><span aria-hidden="true">←</span> Main dashboard</a>
+    <script>
+        var test = {{uniqueProducts | safe}};
+    </script>
+    <div class="container">
+        <h1>Owner Hand Product Wise Stock Report</h1>
+        <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+
+        <!-- Filter Dropdown -->
+        <form method="get" class="mb-4">
+            <label for="product">Filter by Product:</label>
+            <select name="product" id="product" class="form-select d-inline w-auto" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for product in uniqueProducts %}
+                    <option value="{{ product }}" {% if selectedProduct == product %}selected{% endif %}>{{ product }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        {% if subproducts %}
+        <table class="table" id="datatable">
+            <thead>
+                <tr>
+                    <th>Sub Product</th>
+                    {% for gw in gross_weights %}
+                        <th>{{ gw }}g</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            {% load custom_filters %}
+            <tbody>
+                {% for sub in subproducts %}
+                <tr>
+                    <td>{{ sub }}</td>
+                    {% for gw in gross_weights %}
+                        <td>{{ report|dict_get:sub|dict_get:gw|default:"" }}</td>
+                    {% endfor %}
+                    <td>{{ row_totals|dict_get:sub }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    {% for gw in gross_weights %}
+                        <th>{{ col_totals|dict_get:gw }}</th>
+                    {% endfor %}
+                    <th>{{ grand_total }}</th>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+            <p>No data found.</p>
+        {% endif %}
+    </div>
+    <!-- Add jQuery and DataTables script -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+
+    <!-- DataTables core -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- DataTables Buttons extension -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+    <!-- JSZip and pdfmake for Excel and PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        // ~~~~~~~~~~~~~~~~~~~~ Export buttons ~~~~~~~~~~~~~~~~~~~~
+        $(document).ready(function () {
+            $('#datatable').DataTable({
+                dom: '<"top"lfB>rt<"bottom"ip><"clear">',  // B: buttons, f: filtering, r: processing, t: table, i: info, p: pagination
+                buttons: [
+                    'excel',
+                    'print'
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

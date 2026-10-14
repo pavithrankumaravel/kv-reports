@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | Gold Estimate Form</title>
+    <style>
+        :root { --ink:#1d2a3b; --muted:#738092; --line:#e5e8ed; --gold:#b58127; --gold-dark:#8b611a; --canvas:#f5f3ef; }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; background:var(--canvas); color:var(--ink); font-family:Inter,"Segoe UI",Arial,sans-serif; }
+        .gold-shell { width:min(1180px,calc(100% - 36px)); margin:0 auto; }
+        .gold-header { padding:30px 0 27px; }
+        .gold-kicker { margin:0 0 8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.17em; text-transform:uppercase; }
+        .gold-heading-row { display:flex; justify-content:space-between; align-items:end; gap:20px; }
+        .gold-heading-row h1 { margin:0; color:var(--ink); font-size:clamp(32px,4vw,46px); font-weight:750; letter-spacing:-.045em; }
+        .gold-heading-row p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+        .live-clock { flex:0 0 auto; padding:10px 13px; border:1px solid #e7dfce; border-radius:10px; background:#fffdfa; color:#6c5c3e; font-size:12px; font-weight:650; }
+        .gold-card { margin-bottom:35px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 12px 35px #352b190d; }
+        .gold-card-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:17px 22px; border-bottom:1px solid var(--line); background:linear-gradient(110deg,#fffdf8,#fbf8f0); }
+        .gold-card-heading h2 { margin:0; font-size:16px; font-weight:750; }
+        .gold-card-heading p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+        .gold-card-body { padding:22px; }
+        .gold-section-title { grid-column:1/-1; display:flex; align-items:center; gap:10px; margin:8px 0 0; color:#6f5424; font-size:13px; font-weight:800; }
+        .gold-section-title::after { height:1px; flex:1; background:#ece4d3; content:""; }
+        .gold-fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+        .gold-field { min-width:0; }
+        .gold-field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .gold-field input,.gold-field select,.gold-field textarea { width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; }
+        .gold-field input:focus,.gold-field select:focus,.gold-field textarea:focus { outline:0; border-color:#d1ad69; box-shadow:0 0 0 .2rem #b581271a; }
+        .gold-field textarea { min-height:43px; resize:vertical; }
+        .gold-field-wide { grid-column:span 2; }
+        .gold-calculated { background:#f8f6f1 !important; color:#695832 !important; }
+        .gold-actions { display:flex; align-items:center; gap:11px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f3; }
+        .gold-actions button { min-height:43px; padding:10px 20px; border:1px solid transparent; border-radius:8px; font-size:13px; font-weight:750; cursor:pointer; }
+        #submitEstimate { min-width:155px; background:var(--gold); color:#fff; }
+        #submitEstimate:hover { background:var(--gold-dark); }
+        #clearEstimate { border-color:#d9dfe6; background:#fff; color:#465266; }
+        #clearEstimate:hover { background:#f5f6f8; }
+        #success { margin-left:5px; font-size:13px; }
+        .shortcut-note { margin:14px 0 0; color:#8490a0; font-size:11px; }
+        #confirmationModal { display:none; position:fixed; z-index:1000; inset:0; align-items:center; justify-content:center; padding:20px; background:#15203380; backdrop-filter:blur(3px); }
+        .confirm-dialog { width:min(420px,100%); padding:24px; border:1px solid #e8e3d9; border-radius:15px; background:#fff; box-shadow:0 24px 70px #10182740; text-align:center; }
+        .confirm-dialog p { color:var(--muted); }
+        .confirm-dialog #lessAmountText { color:#5e4519; font-size:23px; font-weight:750; }
+        .confirm-actions { display:flex; justify-content:center; gap:10px; margin-top:18px; }
+        .confirm-actions button { min-width:100px; padding:9px 15px; border:0; border-radius:8px; background:var(--gold); color:#fff; font-weight:700; cursor:pointer; }
+        .confirm-actions button:last-child { border:1px solid #d9dfe6; background:#fff; color:#465266; }
+        .gold-footer { padding:0 0 20px; color:#8d929a; text-align:center; font-size:11px; }
+        @media(max-width:900px) { .gold-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:560px) {
+            .gold-shell { width:calc(100% - 22px); }
+            .gold-header { padding-top:21px; }
+            .gold-heading-row { align-items:flex-start; flex-direction:column; gap:12px; }
+            .live-clock { width:100%; }
+            .gold-card-heading,.gold-card-body { padding:15px; }
+            .gold-fields { grid-template-columns:1fr; gap:13px; }
+            .gold-section-title,.gold-field-wide { grid-column:1; }
+            .gold-actions { align-items:stretch; flex-direction:column; }
+            .gold-actions button { width:100%; }
+            #success { margin:0; text-align:center; }
+        }
+    </style>
+</head>
+<body>
+    <header class="gold-shell gold-header">
+        <p class="gold-kicker">Office tools · Jewellery estimates</p>
+        <div class="gold-heading-row">
+            <div><h1>Gold Estimate Form</h1><p>Capture invoice, payment, and old gold details.</p></div>
+            <div class="live-clock"><span>Current time</span> · <span id="datetime"></span></div>
+        </div>
+    </header>
+    <main class="gold-shell">
+        <section class="gold-card">
+            <div class="gold-card-heading"><div><h2>New estimate</h2><p>Enter the details below. Calculated amounts update as you type.</p></div></div>
+            <div class="gold-card-body">
+                <form action="#" method="post" name="submit-to-google-sheet">
+                    {% csrf_token %}
+                    <input type="hidden" id="dateInput" name="Date" value="">
+                    <input type="hidden" id="liveTimeInput" name="Time" value="">
+                    <input type="hidden" id="hudeInput" name="Hude" value="">
+                    <div class="gold-fields">
+                        <div class="gold-section-title">Estimate details</div>
+                        <div class="gold-field"><label for="est3">K Pad No.</label><input type="text" id="est3" name="K Pad No" autocomplete="off"></div>
+                        <div class="gold-field"><label for="est1">Item</label><select name="Item" id="est1"><option value="">Select item</option><option value="Bangle">Bangle</option><option value="Bracelet">Bracelet</option><option value="Chain">Chain</option><option value="Coin">Gold Coin</option><option value="Dollar">Dollar</option><option value="Ring">Ring</option><option value="Thalimani">Thalimani</option><option value="Neclace">Necklace</option><option value="Nanal">Nanal</option><option value="Haram">Haram</option><option value="Stud">Stud</option><option value="Pesary">Pesary</option><option value="Extra">Extra</option><option value="Others">Others</option></select></div>
+                        <div class="gold-field"><label for="invoiceAmount">Invoice Amount</label><input type="number" id="invoiceAmount" name="Invoice Amount" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="gstAmount">GST</label><input type="number" id="gstAmount" name="GST" step="0.01" value=""></div>
+
+                        <div class="gold-section-title">Payments</div>
+                        <div class="gold-field"><label for="rAmount">R Amount</label><input type="number" id="rAmount" name="R Amount" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="oldGoldPayment">Old Gold Payment</label><input type="number" id="oldGoldPayment" name="Old Gold Payment" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="cashReceived">Cash Received</label><input type="number" id="cashReceived" name="Cash Received" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="digitalPayment">GPay / Card / NEFT</label><input type="number" id="digitalPayment" name="GPay / Card / Neft" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="chitAmount">Chit Amount</label><input type="number" id="chitAmount" name="Chit Amount" step="0.01" value=""></div>
+
+                        <div class="gold-section-title">Old gold details</div>
+                        <div class="gold-field"><label for="oldOrnament">Old Ornament (g)</label><input type="number" id="oldOrnament" name="Old Ornament" step="0.001" value=""></div>
+                        <div class="gold-field"><label for="oldKDye">Old K Dye (g)</label><input type="number" id="oldKDye" name="Old K Dye" step="0.001" value=""></div>
+                        <div class="gold-field"><label for="oldOtherDye">Old Other Dye (g)</label><input type="number" id="oldOtherDye" name="Old Other Dye" step="0.001" value=""></div>
+                        <div class="gold-field"><label for="oldValue">Old Value</label><input type="number" id="oldValue" name="Old Value" step="0.01" value=""></div>
+                        <div class="gold-field gold-field-wide"><label for="remarks">Remarks</label><input type="text" id="remarks" name="Remarks" value="No Remarks" maxlength="500"></div>
+
+                        <div class="gold-section-title">Calculated amounts</div>
+                        <div class="gold-field"><label for="balancePaid">Balance Paid</label><input class="gold-calculated" type="number" id="balancePaid" name="Balance Paid" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="lessAmount">Less Amount</label><input class="gold-calculated" type="number" id="lessAmount" name="Less Amount" step="0.01" value=""></div>
+                    </div>
+                    <div class="gold-actions">
+                        <button id="submitEstimate" type="submit" accesskey="s">Save Estimate</button>
+                        <button id="clearEstimate" type="reset" accesskey="c">Clear</button>
+                        <span id="success" role="status" aria-live="polite"></span>
+                    </div>
+                    <p class="shortcut-note">Shortcuts: Alt + S to save · Alt + C to clear · Alt + A / N to confirm · F5 to refresh</p>
+                </form>
+            </div>
+        </section>
+    </main>
+    <footer class="gold-shell gold-footer">Designed &amp; Developed by Pavithran</footer>
+    <div id="confirmationModal" role="dialog" aria-modal="true" aria-labelledby="lessAmountText">
+        <div class="confirm-dialog">
+            <p id="lessAmountText"></p>
+            <p>Are you sure you want to submit this estimate?</p>
+            <div class="confirm-actions"><button type="button" accesskey="a" id="confirmYes">Yes, save</button><button type="button" accesskey="n" id="confirmNo">Cancel</button></div>
+        </div>
+    </div>        <script>
+            //Function to convert lowercase to uppercase
+            function convertToUpperCase() {
+                let inputElement = document.getElementById("est3");
+                inputElement.value = inputElement.value.toUpperCase();
+            }
+            document.addEventListener('input', convertToUpperCase);
+
+            //Function to Store Backend Live Time
+            function updateLiveTimeInput() {
+                var currentTime = new Date();
+                var formattedTime = [currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds()]
+                    .map(value => String(value).padStart(2, '0')).join(':');
+                document.getElementById("liveTimeInput").value = formattedTime;
+            }
+
+            // Update live time every second
+            setInterval(updateLiveTimeInput, 1000);
+
+            // Initial call to display time immediately
+            updateLiveTimeInput();
+            
+            // Function to set the default value as the current date
+            function setDefaultDate() {
+                var currentDate = new Date();
+                var formattedDate = [currentDate.getFullYear(), String(currentDate.getMonth() + 1).padStart(2, '0'), String(currentDate.getDate()).padStart(2, '0')].join('-');
+                document.getElementById('dateInput').value = formattedDate;
+            }
+
+            // Event listener to call the function when the page is loaded
+            document.addEventListener('DOMContentLoaded', setDefaultDate);
+            
+            // Function to update live time and date
+            function updateDateTime() {
+                const now = new Date();
+                const currentDateTime = now.toLocaleString();
+                document.querySelector('#datetime').textContent = currentDateTime;
+            }
+            
+            setInterval(updateDateTime, 1000);
+
+            //Variable Creation
+            const apiURL = "{% url 'goldEstimateCreateApi' %}";
+            const form = document.forms['submit-to-google-sheet'];
+            const submitButton = form.querySelector('button');
+            const netValueInput = form.querySelector('input[name="R Amount"]');
+            const cashInput = form.querySelector('input[name="Cash Received"]');
+            const balancePaidInput = form.querySelector('input[name="Balance Paid"]');
+            const success = document.getElementById('success');
+            const invAmtInput = form.querySelector('input[name="Invoice Amount"]');
+            const netAmtInput = form.querySelector('input[name="R Amount"]');
+            const chitAmtInput = form.querySelector('input[name="Chit Amount"]');
+            const gstAmtInput = form.querySelector('input[name="GST"]');
+            const digitalAmtInput = form.querySelector('input[name="GPay / Card / Neft"]');
+            const oldAmtInput = form.querySelector('input[name="Old Value"]');
+            const lessAmtInput = form.querySelector('input[name="Less Amount"]');
+            const hudeAmtInput = form.querySelector('input[name="Hude"]');
+            const ogpAmtInput = form.querySelector('input[name="Old Gold Payment"]');
+            const oldOrnInput = form.querySelector('input[name="Old Ornament"]');
+            const oldDyeInput = form.querySelector('input[name="Old Other Dye"]');
+            const oldKdyeInput = form.querySelector('input[name="Old K Dye"]');
+
+            async function readApiResponse(response) {
+                const body = await response.text();
+                let result;
+                try { result = body ? JSON.parse(body) : {}; }
+                catch (_) { throw new Error(`Server returned an unexpected response (HTTP ${response.status}). Check the Django server log.`); }
+                if (!response.ok) throw new Error(result.detail || JSON.stringify(result));
+                return result;
+            }
+            
+            // Function to calculate and less amount
+            function lessAmount() {    
+                const invAmt = parseFloat(invAmtInput.value) || 0;
+                const netAmt = parseFloat(netAmtInput.value) || 0;
+                const chitAmt = parseFloat(chitAmtInput.value) || 0;
+                const gstAmt = parseFloat(gstAmtInput.value) || 0;
+                const digitalAmt = parseFloat(digitalAmtInput.value) || 0;
+                const oldAmt = parseFloat(oldAmtInput.value) || 0;
+                const ogpAmt = parseFloat(ogpAmtInput.value) || 0;
+                const hudeAmt = netAmt + chitAmt + digitalAmt + oldAmt;
+                const lessAmt = (invAmt + gstAmt) - ( hudeAmt - ogpAmt );
+                hudeAmtInput.value = hudeAmt.toFixed(2);
+                lessAmtInput.value = lessAmt.toFixed(2);
+            }
+            
+            // Add event listeners to Less Amount
+            invAmtInput.addEventListener('input', lessAmount);
+            gstAmtInput.addEventListener('input', lessAmount);
+            netAmtInput.addEventListener('input', lessAmount);
+            chitAmtInput.addEventListener('input', lessAmount);
+            digitalAmtInput.addEventListener('input', lessAmount);
+            oldAmtInput.addEventListener('input', lessAmount);
+            ogpAmtInput.addEventListener('input', lessAmount);
+            
+            // Function to calculate and update balance
+            function updateBalance() {
+                const netValue = parseFloat(netValueInput.value) || 0;
+                const cash = parseFloat(cashInput.value) || 0;
+                const balancePaid = cash - netValue;
+                balancePaidInput.value = balancePaid.toFixed(2);
+            }
+
+            // Add event listeners to both "Net Value" and "Cash" inputs
+            netValueInput.addEventListener('input', updateBalance);
+            cashInput.addEventListener('input', updateBalance);
+
+            // Event listener for keydown on the form
+            form.addEventListener('keydown', async function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const focusedElement = document.activeElement;
+                    if (focusedElement === submitButton) {
+                        // Manually trigger the click event on the submit button
+                        submitButton.click();
+                        // Set focus on the "Yes" button in the confirmation modal
+                        document.getElementById('confirmYes').focus();
+                    }
+                    else if (focusedElement.id === 'confirmYes' || focusedElement.id === 'confirmNo') {
+                        focusedElement.click();
+                    } 
+                    else {
+                        const formElements = Array.from(form.elements);
+                        const currentIndex = formElements.indexOf(focusedElement);
+                        const nextIndex = currentIndex + 1;
+                        const nextInput = formElements[nextIndex];
+                        
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }
+                }
+            });
+
+            // Function to show a custom confirmation modal
+            function showConfirmationModal(lessAmount) {
+                const modal = document.getElementById('confirmationModal');
+                const lessAmountText = document.getElementById('lessAmountText');
+                
+                // Set the "Less Amount" value in the modal
+                lessAmountText.textContent = `Your Less Amount is ${lessAmtInput.value}`;
+                
+                modal.style.display = 'block';
+                
+                return new Promise((resolve) => {
+                    document.getElementById('confirmYes').onclick = () => {
+                        modal.style.display = 'none';
+                        resolve(true);
+                    };
+                    document.getElementById('confirmNo').onclick = () => {
+                        modal.style.display = 'none';
+                        resolve(false);
+                    };
+                    document.getElementById('confirmYes').focus();
+                });
+            }
+
+            // Event listener for form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitButton.disabled = true;
+                success.textContent = "";
+                try {
+                    lessAmount();
+                    updateBalance();
+                    const userConfirmed = await showConfirmationModal(lessAmtInput.value);
+                    if (!userConfirmed) return;
+
+                    const numericValue = name => Number(form.querySelector(`[name="${name}"]`).value) || 0;
+                    const payload = {
+                        date: form.querySelector('[name="Date"]').value,
+                        time: form.querySelector('[name="Time"]').value,
+                        kPadNo: form.querySelector('[name="K Pad No"]').value.trim().toUpperCase(),
+                        item: form.querySelector('[name="Item"]').value,
+                        invoiceAmount: numericValue('Invoice Amount'), gst: numericValue('GST'),
+                        rAmount: numericValue('R Amount'), oldGoldPayment: numericValue('Old Gold Payment'),
+                        cashReceived: numericValue('Cash Received'), digitalPayment: numericValue('GPay / Card / Neft'),
+                        chitAmount: numericValue('Chit Amount'), oldOrnament: numericValue('Old Ornament'),
+                        oldKDye: numericValue('Old K Dye'), oldOtherDye: numericValue('Old Other Dye'),
+                        oldValue: numericValue('Old Value'), remarks: form.querySelector('[name="Remarks"]').value.trim()
+                    };
+                    const response = await fetch(apiURL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await readApiResponse(response);
+                    success.style.color = 'green';
+                    success.textContent = `Estimate saved successfully (ID ${result.id}).`;
+                    form.reset();
+                    setDefaultDate();
+                    updateLiveTimeInput();
+                    lessAmount();
+                    updateBalance();
+                    document.querySelector('input[name="K Pad No"]').focus();
+                } catch (error) {
+                    success.textContent = `Unable to save estimate: ${error.message}`;
+                    success.style.color = 'red';
+                } finally {
+                    submitButton.disabled = false;
+                }
+            });
+        </script>
+        <!----------- END Of Java Script Code -------------->
+    </body>
+</html>

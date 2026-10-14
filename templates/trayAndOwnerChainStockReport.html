@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | TKG and GPC Chain Stock Report {{ currentDateTime }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+    <style>
+        body { padding: 30px; font-family: Arial, sans-serif; }
+        table th, table td { text-align: center !important; border: 1px solid #ccc; }
+        tfoot td { text-align: center !important; font-weight: bold; background: #f2f2f2; }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+
+<body>
+    <a class="report-dashboard-link" href="{% url 'home' %}"><span aria-hidden="true">←</span> Main dashboard</a>
+<div class="container-fluid">
+    <h3>TKG and GPC Chain Stock Report</h3>
+    <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+
+    {% load custom_filters %}
+
+    <table id="datatable" class="display nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <th></th>
+                {% for wt in uniqueGrsWt %}
+                    <th colspan="5">{{ wt }}g</th>
+                {% endfor %}
+                <th></th>
+            </tr>
+            <tr>
+                <th>Sub Product</th>
+                {% for wt in uniqueGrsWt %}
+                    <th>Sale</th>
+                    <th>Tray</th>
+                    <th>Owner</th>
+                    <th>Total</th>
+                    <th>Re-Order</th>
+                {% endfor %}
+                <th>Grand Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for sub in uniqueSubProducts %}
+            <tr>
+                <td>{{ sub }}</td>
+                {% for wt in uniqueGrsWt %}
+                    {% with cell=matrix|dict_get:sub|dict_get:wt %}
+                        <td></td>
+                        <td>{{ cell.tray }}</td>
+                        <td>{{ cell.owner }}</td>
+                        <td><b>{{ cell.total }}</b></td>
+                        <td></td>
+                    {% endwith %}
+                {% endfor %}
+                <td><b>{{ rowGrandTotals|dict_get:sub }}</b></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td>TOTAL</td>
+                {% for wt in uniqueGrsWt %}
+                    <td></td>
+                    <td>{{ columnTotals|dict_get:wt|dict_get:"tray" }}</td>
+                    <td>{{ columnTotals|dict_get:wt|dict_get:"owner" }}</td>
+                    <td>{{ columnTotals|dict_get:wt|dict_get:"total" }}</td>
+                    <td></td>
+                {% endfor %}
+                <td>{{ overallGrandTotal }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        function getDynamicHeaders() {
+            let gramHeaders = [];
+            let subHeaders = [];
+
+            // First row → Gram headers
+            $('#reportTable thead tr:first th').each(function () {
+                let text = $(this).text().trim();
+                let colspan = $(this).attr('colspan') || 1;
+                gramHeaders.push({ text, colspan: parseInt(colspan) });
+            });
+
+            // Second row → Sale / Tray / Owner...
+            $('#reportTable thead tr:last th').each(function () {
+                subHeaders.push($(this).text().trim());
+            });
+
+            return { gramHeaders, subHeaders };
+        }
+    
+        const table = $('#datatable').DataTable({
+            scrollX: true,
+            scrollXInner: "100%",
+            autoWidth: false,
+    
+            dom: '<"top"lfB>rt<"bottom"ip>',
+    
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    footer: true,
+                    customize: function (xlsx) {
+
+                        var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        var headerRowIndex = 1;
+
+                        var row = `<row r="${headerRowIndex}">
+                            <c t="inlineStr" r="A${headerRowIndex}">
+                                <is><t>Sub Product</t></is>
+                            </c>`;
+
+                        var colIndex = 2; // Column B
+
+                        {% for wt in uniqueGrsWt %}
+                            var startCol = String.fromCharCode(64 + colIndex);
+                            var endCol   = String.fromCharCode(64 + colIndex + 4);
+
+                            row += `
+                                <c t="inlineStr" r="${startCol}${headerRowIndex}">
+                                    <is><t>{{ wt }}g</t></is>
+                                </c>
+                            `;
+
+                            console.log(row)
+
+                            var merge = `
+                                <mergeCell ref="${startCol}${headerRowIndex}:${endCol}${headerRowIndex}"/>
+                            `;
+
+                            $(sheet).find('mergeCells').append(merge);
+
+                            colIndex += 5;
+                        {% endfor %}
+
+                        row += `</row>`;
+
+                        $(sheet).find('sheetData').prepend(row);
+
+                        var mergeCells = $(sheet).find('mergeCells');
+                        mergeCells.attr('count', mergeCells.find('mergeCell').length);
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: 'Print',
+                    footer: true,
+                    orientation: 'landscape',
+                    pageSize: 'A3',
+                    customize: function (win) {
+
+                        let gramHeader = '<tr><th></th>';
+
+                        {% for wt in uniqueGrsWt %}
+                            gramHeader += `<th colspan="5">{{ wt }}g</th>`;
+                        {% endfor %}
+
+                        gramHeader += '<th></th></tr>';
+
+                        $(win.document.body)
+                            .find('thead')
+                            .prepend(gramHeader);
+                    }
+                }
+            ],
+        });
+    });
+    </script>
+    
+</body>
+</html>

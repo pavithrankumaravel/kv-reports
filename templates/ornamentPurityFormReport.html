@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        {% load static %}
+        <link href="{% static 'img/k.svg' %}" rel="icon">
+        <title>Kumaravilas | Ornament Purity Form and Report</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+        {% include "includes/reportPageTheme.html" %}
+        <style>
+            :root { --purity-accent:#b58127; --purity-accent-dark:#8b611a; --purity-ink:#1d2a3b; --purity-muted:#738092; --purity-line:#e5e8ed; }
+            .purity-dialog { width:min(650px,calc(100% - 24px)); margin:1.75rem auto; }
+            .purity-modal { overflow:hidden; border:1px solid var(--purity-line); border-radius:14px; box-shadow:0 24px 70px #10182740; }
+            .purity-modal .modal-header { display:block; padding:19px 22px 16px; border-bottom:1px solid var(--purity-line); background:linear-gradient(110deg,#fffdf8,#fbf8f0); }
+            .purity-modal .modal-title { margin:0; color:var(--purity-ink); font-size:18px; font-weight:750; }
+            .purity-modal .modal-subtitle { margin:5px 0 0; color:var(--purity-muted); font-size:12px; }
+            .purity-modal .modal-body { padding:20px 22px 22px; }
+            .purity-form-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:15px 14px; }
+            .purity-field { min-width:0; grid-column:span 3; }
+            .purity-field-wide { grid-column:1/-1; }
+            .purity-field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+            .purity-field .form-control, .purity-field .select2-container { width:100% !important; }
+            .purity-field input.form-control, .purity-field .select2-selection--single { min-height:43px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--purity-ink); font-size:14px; }
+            .purity-field input.form-control { padding:9px 11px; }
+            .purity-field input.form-control:focus, .purity-field .select2-container--open .select2-selection--single, .purity-field .select2-selection--single:focus { border-color:#d1ad69; box-shadow:0 0 0 .2rem #b581271a; }
+            .purity-field .select2-selection--single { display:flex; align-items:center; }
+            .purity-field .select2-selection__rendered { padding-left:11px !important; color:var(--purity-ink) !important; line-height:normal !important; }
+            .purity-field .select2-selection__arrow { top:8px !important; right:7px !important; }
+            .select2-dropdown { overflow:hidden; border-color:#dce2e8; border-radius:8px; }
+            .select2-results__option { padding:8px 11px; font-size:13px; }
+            .purity-modal .modal-footer { gap:9px; padding:15px 22px; border-top:1px solid var(--purity-line); }
+            .purity-modal .modal-footer .btn { min-height:40px; padding:9px 16px; font-size:13px; font-weight:700; }
+            .purity-modal #submit { border-color:var(--purity-accent); background:var(--purity-accent); }
+            .purity-modal #submit:hover { border-color:var(--purity-accent-dark); background:var(--purity-accent-dark); }
+            @media(max-width:575px) {
+                .purity-dialog { width:calc(100% - 20px); margin:10px auto; }
+                .purity-modal .modal-header { padding:16px 17px 13px; }
+                .purity-modal .modal-body { padding:16px 17px 18px; }
+                .purity-form-grid { grid-template-columns:1fr; gap:13px; }
+                .purity-field, .purity-field-wide { grid-column:1; }
+                .purity-modal .modal-footer { padding:13px 17px; }
+            }
+        </style>
+</head>
+
+    <body>
+        <div class="container mt-4">
+            <h2>Ornament Purity Report</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#add">Ornament Purity Form</button>
+                </div>
+                <div class="col-md-4"></div>
+                <div class="col-md-4 text-align-end">
+                    <a href="../logout" class="btn btn-danger mb-3 justify-content-end">Log Out</a>
+                </div>
+            </div>
+            <div class="modal fade" id="add" tabindex="-1" aria-labelledby="purityModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered purity-dialog">
+                    <div class="modal-content purity-modal">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="purityModalTitle">Ornament Details</h5>
+                            <p class="modal-subtitle">Enter the receipt and ornament measurements.</p>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                {% csrf_token %}
+                                <div class="purity-form-grid">
+                                <div class="purity-field">
+                                    <label for="DesignerName">Designer Name</label>
+                                    <select id="DesignerName" class="form-control">
+                                        <option value="">Select</option>
+                                        {% for d in designers %}
+                                            <option value="{{ d }}">{{ d }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="purity-field">
+                                    <label for="ProductName">Product Name</label>
+                                    <select id="ProductName" class="form-control">
+                                        <option value="">Select</option>
+                                    </select>
+                                </div>
+
+                                <div class="purity-field purity-field-wide">
+                                    <label for="OrnamentName">Ornament Name</label>
+                                    <select id="OrnamentName" class="form-control">
+                                        <option value="">Select</option>
+                                    </select>
+                                </div>
+
+                                <div class="purity-field">
+                                    <label for="Pieces">Pieces</label>
+                                    <input type="number" id="Pieces" class="form-control" min="0" step="1">
+                                </div>
+
+                                <div class="purity-field">
+                                    <label for="GrossWt">Gross Weight</label>
+                                    <input type="number" id="GrossWt" class="form-control" min="0" step="0.001">
+                                </div>
+
+                                <div class="purity-field purity-field-wide">
+                                    <label for="ReceiptPurity">Receipt Purity</label>
+                                    <input type="number" id="ReceiptPurity" class="form-control" min="0" step="0.001">
+                                </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary" id="submit">Submit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <table id="table" class="table table-bordered">
+                <thead class="table-warning">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Designer</th>
+                        <th>Product</th>
+                        <th>Ornament</th>
+                        <th>Pieces</th>
+                        <th>GrossWt</th>
+                        <th>Purity</th>
+                        <th>Purity(from Receipt)</th>
+                        <th>Status</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in datas %}
+                        <tr>
+                            <td>{{ data.ProcessingDate }}</td>
+                            <td>{{ data.ProcessingTime }}</td>
+                            <td>{{ data.DesignerName }}</td>
+                            <td>{{ data.ProductName }}</td>
+                            <td>{{ data.OrnamentName }}</td>
+                            <td>{{ data.Pieces }}</td>
+                            <td>{{ data.GrossWt }}</td>
+                            <td>{{ data.Purity }}</td>
+                            <td>{{ data.ReceiptPurity }}</td>
+                            
+                            <td class="{% if data.Status == 'Unmatched' %}text-danger{% else %}text-success{% endif %}">
+                                {{ data.Status }}
+                            </td>
+                            
+                            <td>
+                                <button class="btn btn-danger btn-sm deleteBtn"
+                                    data-date="{{ data.ProcessingDate|date:'Y-m-d' }}"
+                                    data-time="{{ data.ProcessingTime|time:'H:i:s' }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+        <script>
+
+            $(document).ready(function(){
+                // Export Button:
+                $('#table').DataTable({
+                    dom:'Blfrtip',
+                    buttons:['csv','excel','pdf']
+                });
+
+
+                // Search option in dropdown:
+                $('#DesignerName').select2({
+                    dropdownParent: $('#add'),
+                    width:'100%'
+                });
+
+                $('#ProductName').select2({
+                    dropdownParent: $('#add'),
+                    width:'100%'
+                });
+
+                $('#OrnamentName').select2({
+                    dropdownParent: $('#add'),
+                    width:'100%'
+                });
+
+
+                // "Ornament Name" Dropdown values depends on the selected "Designe Name" Dropdown value:
+                $('#DesignerName').change(function(){
+                    var designer = $(this).val();
+                    // reset below dropdowns
+                    $('#ProductName').empty().append('<option value="">Select</option>');
+                    $('#OrnamentName').empty().append('<option value="">Select</option>');
+                    $.ajax({
+                    url:"{% url 'getProductsApi' %}",
+                        data:{designer:designer},
+                        success:function(response){
+                            response.products.forEach(function(p){
+                                $('#ProductName').append('<option value="'+p+'">'+p+'</option>');
+                            });
+                        }
+                    });
+                });
+
+                $('#ProductName').change(function(){
+                    var designer = $('#DesignerName').val();
+                    var product = $(this).val();
+                    $('#OrnamentName').empty().append('<option value="">Select</option>');
+                    $.ajax({
+                    url:"{% url 'getOrnamentsApi' %}",
+                        data:{
+                            designer:designer,
+                            product:product
+                        },
+                        success:function(response){
+                            response.ornaments.forEach(function(o){
+                                $('#OrnamentName').append('<option value="'+o+'">'+o+'</option>');
+                            });
+                        }
+                    });
+                });
+
+
+                // Delete Button:
+                $(document).on("click",".deleteBtn",function(){
+                    if(!confirm("Delete this record?")){
+                        return;
+                    }
+                    var date=$(this).data("date");
+                    var time=$(this).data("time");
+                    $.ajax({
+                        type:"POST",
+                    url:"{% url 'deleteOrnamentPurity' %}",
+                        data:{
+                            csrfmiddlewaretoken:'{{ csrf_token }}',
+                            date:date,
+                            time:time
+                        },
+                        success:function(response){
+                            alert("Record deleted");
+                            location.reload();
+                        }
+                    });
+                });
+
+
+                // Form Submit:
+                $('#submit').click(function(){
+                    var DesignerName=$('#DesignerName').val();
+                    var ProductName=$('#ProductName').val();
+                    var OrnamentName=$('#OrnamentName').val();
+                    var Pieces=$('#Pieces').val();
+                    var GrossWt=$('#GrossWt').val();
+                    var ReceiptPurity=$('#ReceiptPurity').val();
+
+                    if(DesignerName==""||ProductName==""||OrnamentName==""||Pieces==""||GrossWt==""||ReceiptPurity=="") {
+                        alert("Please complete all fields");
+                        return;
+                    }
+
+                    $.ajax({
+                        type:'POST',
+                    url:"{% url 'submitOrnamentPurityForm' %}",
+                        data:{
+                            csrfmiddlewaretoken:'{{ csrf_token }}',
+                            DesignerName:DesignerName,
+                            ProductName:ProductName,
+                            OrnamentName:OrnamentName,
+                            Pieces:Pieces,
+                            GrossWt:GrossWt,
+                            ReceiptPurity:ReceiptPurity
+                        },
+                        success:function(){
+                            alert("Purity Data Saved");
+                            location.reload();
+                        }
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

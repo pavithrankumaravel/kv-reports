@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | TKG and GPC Chain Stock Report (Owner Hand) {{ currentDateTime }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+
+        .col-md-4{
+            padding: 10px;
+            max-width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #cccccc;
+            padding: 8px;
+            text-align: center !important;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid green;
+            background-color: #d4edda;
+            color: green;
+            border-radius: 5px;
+        }
+
+        .error {
+            border-color: red;
+            background-color: #f8d7da;
+            color: red;
+        }
+
+        .dataTables_length, .dt-buttons {
+            padding: 10px;
+        }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+<body>
+    <a class="report-dashboard-link" href="{% url 'home' %}"><span aria-hidden="true">←</span> Main dashboard</a>
+    <div class="container mt-5">
+        <h1>TKG and GPC Chain Stock Report (Owner Hand)</h1>
+        <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+
+        <table id="datatable" class="display">
+            <thead>
+                <tr>
+                    <th>Sub Product</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <!-- Add jQuery and DataTables script -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- DataTables Buttons extension -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+    <!-- JSZip and pdfmake for Excel and PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        // ~~~~~~~~~~~~~~~~~~~~ Export buttons ~~~~~~~~~~~~~~~~~~~~
+        $(document).ready(function () {
+            $.getJSON("{% url 'ownerHandChainStockReportData' %}")
+                .done(function (response) {
+                    const report = response.data;
+                    const header = $("#datatable thead tr").empty();
+                    header.append($("<th>").text("Sub Product"));
+                    report.weights.forEach(function (weight) {
+                        header.append($("<th>").text(weight + "g"));
+                    });
+
+                    const body = $("#datatable tbody").empty();
+                    report.rows.forEach(function (row) {
+                        const tableRow = $("<tr>").append($("<td>").text(row.subProduct));
+                        row.values.forEach(function (value) {
+                            tableRow.append($("<td>").text(value));
+                        });
+                        body.append(tableRow);
+                    });
+
+                    $('#datatable').DataTable({
+                        dom: '<"top"lfB>rt<"bottom"ip><"clear">',
+                        buttons: [
+                            'csv',
+                            'excel',
+                            {
+                                extend: 'pdfHtml5',
+                                text: 'PDF',
+                                orientation: 'landscape',
+                                pageSize: 'A4',
+                                customize: function (doc) {
+                                    var objLayout = {};
+                                    objLayout.hLineWidth = function () { return 0.5; };
+                                    objLayout.vLineWidth = function () { return 0.5; };
+                                    objLayout.hLineColor = function () { return '#aaa'; };
+                                    objLayout.vLineColor = function () { return '#aaa'; };
+                                    objLayout.paddingLeft = function () { return 4; };
+                                    objLayout.paddingRight = function () { return 4; };
+                                    doc.content[1].layout = objLayout;
+                                    doc.styles.tableHeader.fontSize = 10;
+                                    doc.defaultStyle.fontSize = 9;
+                                }
+                            },
+                            'print'
+                        ]
+                    });
+                })
+                .fail(function () {
+                    $("#datatable tbody").html(
+                        '<tr><td class="text-danger">Unable to load the report data.</td></tr>'
+                    );
+                });
+        });
+    </script>
+</body>
+</html>

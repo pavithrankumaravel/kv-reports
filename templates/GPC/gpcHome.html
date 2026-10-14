@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | GPC Stock Reports</title>
+    {% include "includes/businessPortalStyles.html" %}
+</head>
+<body>
+    <header class="hero">
+        <div class="shell">
+            <div class="topbar">
+                <a class="brand" href="{% url 'home' %}"><span class="brand-mark">KV</span><span>Stock Reports</span></a>
+                <nav class="portal-nav" aria-label="Business portals">
+                    <a class="active" href="{% url 'gpcHome' %}">GPC</a>
+                    <a href="{% url 'tkgHome' %}">TKG</a>
+                    <a href="{% url 'gsnHome' %}">GSN</a>
+                </nav>
+            </div>
+            <div class="hero-copy">
+                <p class="eyebrow">Business portal · GPC</p>
+                <h1>Ganesh Park Centre Pvt Ltd<br>Reports</h1>
+                <p>Review GPC inventory, chain movement, supplier sales, and owner hand stock in one place.</p>
+            </div>
+        </div>
+    </header>
+    <main class="shell">
+        <div class="intro"><h2>GPC reports</h2><p>Select a report to open it in a new tab.</p></div>
+        <div class="report-groups">
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">▤</span><div><h3>Overview</h3><p>Complete stock and sale views</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'gpcEntireStockReport' %}" target="_blank" rel="noopener"><span>Entire Stock Report</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcEntireSaleReport' %}" target="_blank" rel="noopener"><span>Entire Sale Report</span><span>›</span></a>
+                </div>
+            </section>
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">◈</span><div><h3>Stock &amp; sales</h3><p>Product, chain, and supplier reports</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'gpcProductWiseStockReport' %}" target="_blank" rel="noopener"><span>Product Wise Stock Report</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcMainChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Main Branch)</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcBranchChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Branch Office)</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcTrayChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Tray Piece)</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Product, SubProduct &amp; GrsWt Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcSupProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Supplier, Product, SubProduct &amp; GrsWt Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcDateAndSupplierWiseChainSaleReport' %}" target="_blank" rel="noopener"><span>Date and Supplier Wise Chain Sale</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gpcSupplierWiseSaleReport' %}" target="_blank" rel="noopener"><span>Supplier Wise Sale Report</span><span>›</span></a>
+                </div>
+            </section>
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">✧</span><div><h3>Owner hand</h3><p>Stock currently in owner hand</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'ownerHandGpcEntireStockReport' %}" target="_blank" rel="noopener"><span>Entire Owner Hand Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGpcProductWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Product Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGpcChainStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Chain Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGpcProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Product, SubProduct &amp; GrsWt Wise</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGpcSupProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Supplier, Product, SubProduct &amp; GrsWt Wise</span><span>›</span></a>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer><div class="shell">Designed &amp; Developed by Pavithran</div></footer>
+</body>
+</html>

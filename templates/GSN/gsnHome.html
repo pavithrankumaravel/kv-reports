@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | GSN Stock Reports</title>
+    {% include "includes/businessPortalStyles.html" %}
+</head>
+<body>
+    <header class="hero">
+        <div class="shell">
+            <div class="topbar">
+                <a class="brand" href="{% url 'home' %}"><span class="brand-mark">KV</span><span>Stock Reports</span></a>
+                <nav class="portal-nav" aria-label="Business portals">
+                    <a href="{% url 'gpcHome' %}">GPC</a>
+                    <a href="{% url 'tkgHome' %}">TKG</a>
+                    <a class="active" href="{% url 'gsnHome' %}">GSN</a>
+                </nav>
+            </div>
+            <div class="hero-copy">
+                <p class="eyebrow">Business portal · GSN</p>
+                <h1>Kumara Vilas<br>G. Subramani Reports</h1>
+                <p>Review GSN inventory, supplier sales, and owner hand stock from this report center.</p>
+            </div>
+        </div>
+    </header>
+    <main class="shell">
+        <div class="intro"><h2>GSN reports</h2><p>Select a report to open it in a new tab.</p></div>
+        <div class="report-groups">
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">▤</span><div><h3>Overview</h3><p>Complete stock and sale views</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'gsnEntireStockReport' %}" target="_blank" rel="noopener"><span>Entire Stock Report</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gsnEntireSaleReport' %}" target="_blank" rel="noopener"><span>Entire Sale Report</span><span>›</span></a>
+                </div>
+            </section>
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">◈</span><div><h3>Stock &amp; sales</h3><p>Product and supplier reports</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'gsnProductWiseStockReport' %}" target="_blank" rel="noopener"><span>Product Wise Stock Report</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gsnProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Product, SubProduct &amp; GrsWt Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gsnSupProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Supplier, Product, SubProduct &amp; GrsWt Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'gsnSupplierWiseSaleReport' %}" target="_blank" rel="noopener"><span>Supplier Wise Sale Report</span><span>›</span></a>
+                </div>
+            </section>
+            <section class="report-card">
+                <div class="card-heading"><span class="symbol" aria-hidden="true">✧</span><div><h3>Owner hand</h3><p>Stock currently in owner hand</p></div></div>
+                <div class="link-list">
+                    <a class="link-row" href="{% url 'ownerHandGsnEntireStockReport' %}" target="_blank" rel="noopener"><span>Entire Owner Hand Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandgsnProductWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Product Wise Stock</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGsnProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Product, SubProduct &amp; GrsWt Wise</span><span>›</span></a>
+                    <a class="link-row" href="{% url 'ownerHandGsnSupProSubGrsWiseStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Supplier, Product, SubProduct &amp; GrsWt Wise</span><span>›</span></a>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer><div class="shell">Designed &amp; Developed by Pavithran</div></footer>
+</body>
+</html>

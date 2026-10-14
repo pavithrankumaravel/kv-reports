@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | Ornament Wastage Master</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/css/bootstrap-multiselect.css">
+
+    <!-- In your <head> -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        #null {
+            background-color: #ffffe1;
+        }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+<body>
+    <script>
+        var test = {{datas | safe}};
+    </script>
+    <div class="container mt-5">
+        <h1>Ornament Wastage Master</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addWastage">Add New Wastage</button>
+            </div>
+            <div class="col-md-4"></div>
+            <div class="col-md-4 text-align-end">
+                <a href="../logout" class="btn btn-danger mb-3 justify-content-end">Log Out</a>
+            </div>
+        </div>
+        <div class="modal fade" id="addWastage">
+            <div class="modal-dialog">
+                <div class="modal-content">
+        
+                    <div class="modal-header">
+                        <h5>Add New Wastage Details</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+        
+                    <div class="modal-body">
+                        <form>
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label>Designer Name</label>
+                                <select id="DesignerName" class="form-control">
+                                    <option value="">Select</option>
+                                    {% for d in designers %}
+                                        <option value="{{ d }}">{{ d }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Product Name</label>
+                                <input type="text" id="ProductName" class="form-control">
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Ornament Name</label>
+                                <input type="text" id="OrnamentName" class="form-control">
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Gross Weight</label>
+                                <input type="number" id="GrossWt" class="form-control">
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Wastage (%)</label>
+                                <input type="number" step="0.001" id="WastagePercent" class="form-control">
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Wastage (Gram)</label>
+                                <input type="number" step="0.001" id="WastageGram" class="form-control">
+                            </div>
+        
+                            <div class="mb-3">
+                                <label>Making Charge</label>
+                                <input type="number" id="MakingCharge" class="form-control">
+                            </div>
+        
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="saveWastage">Save</button>
+                            </div>
+        
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div><br>
+
+        <table class="table table-bordered"  id="datatable">
+            <thead>
+                <tr>
+                    <th>Designer Name</th>
+                    <th>Product Name</th>
+                    <th>Ornament Name</th>
+                    <th>Gross Weight</th>
+                    <th>Wastage (% value)</th>
+                    <th>Wastage (g. value)</th>
+                    <th>Making Charge</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in datas %}
+                    <tr>
+                        <td>{{ data.DesignerName }}</td>
+                        <td>{{ data.ProductName }}</td>
+                        <td>{{ data.OrnamentName }}</td>
+                        <td>{{ data.GrossWt }}</td>
+                        {% if data.WastagePercentageValue %}
+                            <td>{{ data.WastagePercentageValue }}</td>
+                        {% else %}
+                            <td id="null">NULL</td>
+                        {% endif%}
+
+                        {% if data.WastageGramValue %}
+                            <td>{{ data.WastageGramValue }}g</td>
+                        {% else %}
+                            <td id="null">NULL</td>
+                        {% endif%}
+                        <td>{{ data.MakingCharge }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery -->
+    <!-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/js/bootstrap-multiselect.min.js"></script>
+    
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <!-- DataTables Buttons -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    
+    <!-- Required for Excel and PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#datatable').DataTable({
+                dom: '<"top"lfB>rt<"bottom"ip><"clear">',  // B: buttons, f: filtering, r: processing, t: table, i: info, p: pagination
+                buttons: [
+                    'excel',
+                    'print'
+                ]
+            });
+
+            $('#saveWastage').click(function(){
+
+                var DesignerName = $('#DesignerName').val();
+                var ProductName = $('#ProductName').val();
+                var OrnamentName = $('#OrnamentName').val();
+                var GrossWt = $('#GrossWt').val();
+                var WastagePercent = ($('#WastagePercent').val())/100;
+                var WastageGram = $('#WastageGram').val();
+                var MakingCharge = $('#MakingCharge').val();
+
+                if(DesignerName=="" || ProductName=="" || OrnamentName=="" || GrossWt==""){
+                    alert("Please fill required fields");
+                    return;
+                }
+
+                $.ajax({
+
+                    type:'POST',
+                    url:"{% url 'addOrnamentWastageMaster' %}",
+
+                    data:{
+                        csrfmiddlewaretoken:'{{ csrf_token }}',
+                        DesignerName:DesignerName,
+                        ProductName:ProductName,
+                        OrnamentName:OrnamentName,
+                        GrossWt:GrossWt,
+                        WastagePercent:WastagePercent,
+                        WastageGram:WastageGram,
+                        MakingCharge:MakingCharge
+                    },
+
+                    success:function(){
+                        alert("Wastage Added Successfully");
+                        location.reload();
+                    }
+
+                });
+
+            });
+        });
+    </script>
+</body>
+</html>

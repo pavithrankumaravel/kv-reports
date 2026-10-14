@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | TKG Chain Stock Report (Branch Office) {{ currentDateTime }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css"/>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #cccccc; padding: 8px; text-align: center !important; }
+        th { background-color: #f2f2f2; }
+        tfoot th { background-color: #e6e6e6; font-weight: bold; }
+    </style>
+    {% include "includes/reportPageTheme.html" %}
+</head>
+<body>
+    <a class="report-dashboard-link" href="{% url 'home' %}"><span aria-hidden="true">←</span> Main dashboard</a>
+    <script>
+        var data = {{ data | safe }};
+    </script>
+        <h1>TKG Chain Stock Report (Branch Office)</h1>
+        <p class="text-end"><b>Date & Time:</b> {{ currentDateTime }}</p>
+
+        {% load custom_filters %}
+        <table id="datatable" class="display">
+            <thead>
+                <tr>
+                    <th>Sub Product</th>
+                    {% for weight in gross_weights %}
+                        <th>{{ weight }}g</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subproducts %}
+                <tr>
+                    <td>{{ sub }}</td>
+                    {% for weight in gross_weights %}
+                        <td>{{ report|get_item:sub|get_item:weight|default:"" }}</td>
+                    {% endfor %}
+                    <td>{{ row_totals|get_item:sub }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    {% for weight in gross_weights %}
+                        <th>{{ col_totals|get_item:weight }}</th>
+                    {% endfor %}
+                    <th>{{ grand_total }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- jQuery and DataTables -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#datatable').DataTable({
+                dom: '<"top"lfB>rt<"bottom"ip><"clear">',
+                buttons: ['excel', 'print']
+            });
+        });
+    </script>
+</body>
+</html>

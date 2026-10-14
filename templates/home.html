@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | Stock Report Home</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #17243a;
+            --muted: #68758a;
+            --line: #e5eaf1;
+            --blue: #2463eb;
+            --gold: #e8b65a;
+            --surface: #fff;
+            --background: #f3f6fb;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--ink);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+        a { color: inherit; text-decoration: none; }
+        .page-shell { width: min(1240px, calc(100% - 40px)); margin: 0 auto; }
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 30px 0 94px;
+            color: #fff;
+            background: radial-gradient(ellipse at 82% 5%, #33558b 0, transparent 37%), linear-gradient(125deg, #101b31, #172e50 65%, #1f4268);
+        }
+        .hero::after {
+            position: absolute;
+            right: -110px;
+            bottom: -300px;
+            width: 550px;
+            height: 550px;
+            border: 1px solid #ffffff18;
+            border-radius: 50%;
+            content: "";
+            box-shadow: 0 0 0 45px #ffffff08, 0 0 0 90px #ffffff06;
+            pointer-events: none;
+        }
+        .topbar, .brand, .top-links, .business-links, .section-heading, .report-link { display: flex; align-items: center; }
+        .topbar { justify-content: space-between; gap: 20px; }
+        .brand { gap: 12px; font-weight: 700; letter-spacing: .02em; }
+        .brand-mark {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid #ffffff42;
+            border-radius: 13px;
+            color: var(--gold);
+            font-family: Georgia, serif;
+            font-size: 24px;
+        }
+        .top-links { gap: 10px; }
+        .top-links a, .business-link {
+            border: 1px solid #ffffff35;
+            border-radius: 9px;
+            transition: background .18s ease, transform .18s ease;
+        }
+        .top-links a { padding: 9px 13px; color: #eaf0fa; font-size: 13px; }
+        .top-links a:hover, .business-link:hover { transform: translateY(-2px); background: #ffffff18; }
+        .hero-copy { position: relative; z-index: 1; max-width: 710px; padding-top: 58px; }
+        .eyebrow { margin: 0 0 12px; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+        h1 { margin: 0; font-size: clamp(34px, 5vw, 54px); letter-spacing: -.045em; line-height: 1.08; }
+        .hero-copy > p:last-child { max-width: 570px; margin: 17px 0 0; color: #cfdaea; font-size: 16px; line-height: 1.7; }
+        .business-panel { position: relative; z-index: 2; margin-top: -58px; }
+        .business-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .business-link {
+            display: flex;
+            min-height: 104px;
+            align-items: center;
+            gap: 15px;
+            padding: 19px 22px;
+            border-color: var(--line);
+            background: var(--surface);
+            box-shadow: 0 10px 30px #14243b0b;
+            color: var(--ink);
+        }
+        .business-link:hover { background: #fff; box-shadow: 0 15px 32px #14243b16; }
+        .business-icon {
+            display: grid;
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            place-items: center;
+            border-radius: 15px;
+            background: #edf3ff;
+            color: var(--blue);
+            font-size: 17px;
+            font-weight: 800;
+        }
+        .business-link:nth-child(2) .business-icon { background: #fff5df; color: #a66c08; }
+        .business-link:nth-child(3) .business-icon { background: #e8f7f1; color: #15815d; }
+        .business-text { display: grid; gap: 5px; }
+        .business-text strong { font-size: 17px; }
+        .business-text small { color: var(--muted); font-size: 12px; }
+        .business-arrow { margin-left: auto; color: #8793a5; font-size: 21px; }
+        main { padding: 45px 0 58px; }
+        .section-heading { justify-content: space-between; gap: 16px; margin-bottom: 19px; }
+        .section-heading h2 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
+        .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+        .report-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+        .report-card {
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--surface);
+            box-shadow: 0 5px 18px #14243b07;
+        }
+        .card-heading { display: flex; align-items: center; gap: 12px; padding: 18px 19px; border-bottom: 1px solid var(--line); }
+        .card-symbol {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border-radius: 11px;
+            background: #edf3ff;
+            color: var(--blue);
+            font-size: 18px;
+        }
+        .report-card:nth-child(2) .card-symbol { background: #fff5df; color: #a66c08; }
+        .report-card:nth-child(3) .card-symbol { background: #e8f7f1; color: #15815d; }
+        .card-heading h3 { margin: 0; font-size: 15px; }
+        .card-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+        .report-list { padding: 6px 10px 10px; }
+        .report-link { justify-content: space-between; gap: 12px; padding: 11px 10px; border-radius: 8px; color: #35445b; font-size: 13px; line-height: 1.35; }
+        .report-link:hover { background: #f4f7fc; color: var(--blue); }
+        .report-link span:last-child { color: #9aa5b5; font-size: 17px; }
+        footer { padding: 18px 0 22px; border-top: 1px solid var(--line); color: #8490a1; text-align: center; font-size: 12px; }
+        @media (max-width: 900px) {
+            .report-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .report-card:last-child { grid-column: 1 / -1; }
+            .hero-copy { padding-top: 46px; }
+        }
+        @media (max-width: 620px) {
+            .page-shell { width: min(100% - 28px, 480px); }
+            .hero { padding-top: 20px; padding-bottom: 82px; }
+            .topbar { align-items: flex-start; }
+            .brand { font-size: 13px; }
+            .brand-mark { width: 38px; height: 38px; }
+            .top-links { display: none; }
+            .hero-copy { padding-top: 44px; }
+            .hero-copy > p:last-child { font-size: 14px; }
+            .business-links { grid-template-columns: 1fr; gap: 10px; }
+            .business-link { min-height: 78px; padding: 12px 15px; }
+            .business-icon { width: 44px; height: 44px; flex-basis: 44px; }
+            .business-panel { margin-top: -48px; }
+            main { padding-top: 34px; }
+            .report-groups { grid-template-columns: 1fr; }
+            .report-card:last-child { grid-column: auto; }
+            .section-heading { align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="page-shell">
+            <div class="topbar">
+                <a class="brand" href="{% url 'home' %}" aria-label="Stock Reports home">
+                    <span class="brand-mark">KV</span>
+                    <span>Stock Reports</span>
+                </a>
+                <nav class="top-links" aria-label="Business systems">
+                    <a href="{% url 'gpcHome' %}" target="_blank" rel="noopener">GPC Portal ↗</a>
+                    <a href="{% url 'tkgHome' %}" target="_blank" rel="noopener">TKG Portal ↗</a>
+                    <a href="{% url 'gsnHome' %}" target="_blank" rel="noopener">GSN Portal ↗</a>
+                </nav>
+            </div>
+            <div class="hero-copy">
+                <p class="eyebrow">KUMARAVILAS · Reporting</p>
+                <h1>Good to see you.<br>What would you like to review?</h1>
+                <p>Access stock, sales, purity, and office reports from one place. Choose a business portal or open a report below.</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-shell business-panel" aria-label="Business portals">
+        <div class="business-links">
+            <a class="business-link" href="{% url 'gpcHome' %}" target="_blank" rel="noopener">
+                <span class="business-icon">GPC</span>
+                <span class="business-text"><strong>GPC</strong><small>Open GPC reports</small></span>
+                <span class="business-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="business-link" href="{% url 'tkgHome' %}" target="_blank" rel="noopener">
+                <span class="business-icon">TKG</span>
+                <span class="business-text"><strong>TKG</strong><small>Open TKG reports</small></span>
+                <span class="business-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="business-link" href="{% url 'gsnHome' %}" target="_blank" rel="noopener">
+                <span class="business-icon">GSN</span>
+                <span class="business-text"><strong>GSN</strong><small>Open GSN reports</small></span>
+                <span class="business-arrow" aria-hidden="true">↗</span>
+            </a>
+        </div>
+    </section>
+
+    <main class="page-shell">
+        <div class="section-heading">
+            <div>
+                <h2>Reports &amp; tools</h2>
+                <p>Choose a page to get started.</p>
+            </div>
+        </div>
+
+        <div class="report-groups">
+            <section class="report-card" aria-labelledby="stockReportsTitle">
+                <div class="card-heading">
+                    <span class="card-symbol" aria-hidden="true">◈</span>
+                    <div><h3 id="stockReportsTitle">Stock reports</h3><p>Inventory, chains, and sales</p></div>
+                </div>
+                <div class="report-list">
+                    <a class="report-link" href="{% url 'ownerHandStockReport' %}" target="_blank" rel="noopener"><span>Owner Hand Stock Report (Product, SubProduct, GrsWt Wise)</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'trayPieceChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Tray Piece)</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'ownerHandChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Owner Hand)</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'trayAndOwnerChainStockReport' %}" target="_blank" rel="noopener"><span>Chain Stock Report (Tray Piece and Owner Hand)</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'chainSizeReport' %}" target="_blank" rel="noopener"><span>Chain Size &amp; Weight Report</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'dateAndSupplierWiseChainSaleReport' %}" target="_blank" rel="noopener"><span>Date and Supplier Wise Chain Sale Report</span><span>›</span></a>
+                </div>
+            </section>
+
+            <section class="report-card" aria-labelledby="purityPagesTitle">
+                <div class="card-heading">
+                    <span class="card-symbol" aria-hidden="true">✧</span>
+                    <div><h3 id="purityPagesTitle">Ornament purity</h3><p>Manage and review purity details</p></div>
+                </div>
+                <div class="report-list">
+                    <a class="report-link" href="{% url 'ornamentWastageMaster' %}" target="_blank" rel="noopener"><span>Ornament Wastage Master</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'ornamentPurityFormReport' %}" target="_blank" rel="noopener"><span>Ornament Purity Form &amp; Report</span><span>›</span></a>
+                </div>
+            </section>
+
+            <section class="report-card" aria-labelledby="officePagesTitle">
+                <div class="card-heading">
+                    <span class="card-symbol" aria-hidden="true">▦</span>
+                    <div><h3 id="officePagesTitle">Office tools</h3><p>Timesheets and estimates</p></div>
+                </div>
+                <div class="report-list">
+                    <a class="report-link" href="{% url 'employeeTimeSheetManagement' %}" target="_blank" rel="noopener"><span>Employee - Time Sheet Management</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'adminTimeSheetManagement' %}" target="_blank" rel="noopener"><span>Admin - Time Sheet Management</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'goldEstimateForm' %}" target="_blank" rel="noopener"><span>Gold Estimate Form</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'goldEstimateReport' %}" target="_blank" rel="noopener"><span>Gold Estimate Report</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'silverEstimateForm' %}" target="_blank" rel="noopener"><span>Silver Estimate Form</span><span>›</span></a>
+                    <a class="report-link" href="{% url 'silverEstimateReport' %}" target="_blank" rel="noopener"><span>Silver Estimate Report</span><span>›</span></a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer><div class="page-shell">Designed &amp; Developed by Pavithran</div></footer>
+</body>
+</html>

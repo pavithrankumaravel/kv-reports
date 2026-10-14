@@ -1,0 +1,6 @@
+Django==6.1.1
+djangorestframework==3.18.1
+mssql-django==1.8.0
+pyodbc==5.2.0
+numpy==2.3.2
+pandas==2.3.1

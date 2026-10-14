@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | Silver Estimate Form</title>
+    <style>
+        :root { --ink:#1d2a3b; --muted:#738092; --line:#e5e8ed; --silver:#6d8b9e; --silver-dark:#4a6b7f; --canvas:#f0f4f6; }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; background:var(--canvas); color:var(--ink); font-family:Inter,"Segoe UI",Arial,sans-serif; }
+        .silver-shell { width:min(1180px,calc(100% - 36px)); margin:0 auto; }
+        .silver-header { padding:30px 0 27px; }
+        .silver-kicker { margin:0 0 8px; color:var(--silver); font-size:11px; font-weight:800; letter-spacing:.17em; text-transform:uppercase; }
+        .silver-heading-row { display:flex; justify-content:space-between; align-items:end; gap:20px; }
+        .silver-heading-row h1 { margin:0; color:var(--ink); font-size:clamp(32px,4vw,46px); font-weight:750; letter-spacing:-.045em; }
+        .silver-heading-row p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+        .live-clock { flex:0 0 auto; padding:10px 13px; border:1px solid #cddce3; border-radius:10px; background:#f0f7fa; color:#3d5c6e; font-size:12px; font-weight:650; }
+        .silver-card { margin-bottom:35px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 12px 35px #2b4a5e0d; }
+        .silver-card-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:17px 22px; border-bottom:1px solid var(--line); background:linear-gradient(110deg,#f0f7fa,#e8f0f4); }
+        .silver-card-heading h2 { margin:0; font-size:16px; font-weight:750; }
+        .silver-card-heading p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+        .silver-card-body { padding:22px; }
+        .silver-section-title { grid-column:1/-1; display:flex; align-items:center; gap:10px; margin:8px 0 0; color:#3d5c6e; font-size:13px; font-weight:800; }
+        .silver-section-title::after { height:1px; flex:1; background:#d0dde3; content:""; }
+        .silver-fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+        .silver-field { min-width:0; }
+        .silver-field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .silver-field input,.silver-field select,.silver-field textarea { width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; }
+        .silver-field input:focus,.silver-field select:focus,.silver-field textarea:focus { outline:0; border-color:#7aa8be; box-shadow:0 0 0 .2rem #6d8b9e1a; }
+        .silver-field textarea { min-height:43px; resize:vertical; }
+        .silver-field-wide { grid-column:span 2; }
+        .silver-calculated { background:#ecf2f5 !important; color:#3d5c6e !important; }
+        .silver-actions { display:flex; align-items:center; gap:11px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f3; }
+        .silver-actions button { min-height:43px; padding:10px 20px; border:1px solid transparent; border-radius:8px; font-size:13px; font-weight:750; cursor:pointer; }
+        #submitEstimate { min-width:155px; background:var(--silver); color:#fff; }
+        #submitEstimate:hover { background:var(--silver-dark); }
+        #clearEstimate { border-color:#d9dfe6; background:#fff; color:#465266; }
+        #clearEstimate:hover { background:#f5f6f8; }
+        #success { margin-left:5px; font-size:13px; }
+        .shortcut-note { margin:14px 0 0; color:#8490a0; font-size:11px; }
+        #confirmationModal { display:none; position:fixed; z-index:1000; inset:0; align-items:center; justify-content:center; padding:20px; background:#15203380; backdrop-filter:blur(3px); }
+        .confirm-dialog { width:min(420px,100%); padding:24px; border:1px solid #d8e3e9; border-radius:15px; background:#fff; box-shadow:0 24px 70px #10182740; text-align:center; }
+        .confirm-dialog p { color:var(--muted); }
+        .confirm-dialog #balancePaidText { color:#2d5568; font-size:23px; font-weight:750; }
+        .confirm-actions { display:flex; justify-content:center; gap:10px; margin-top:18px; }
+        .confirm-actions button { min-width:100px; padding:9px 15px; border:0; border-radius:8px; background:var(--silver); color:#fff; font-weight:700; cursor:pointer; }
+        .confirm-actions button:last-child { border:1px solid #d9dfe6; background:#fff; color:#465266; }
+        .silver-footer { padding:0 0 20px; color:#8d929a; text-align:center; font-size:11px; }
+        @media(max-width:900px) { .silver-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:560px) {
+            .silver-shell { width:calc(100% - 22px); }
+            .silver-header { padding-top:21px; }
+            .silver-heading-row { align-items:flex-start; flex-direction:column; gap:12px; }
+            .live-clock { width:100%; }
+            .silver-card-heading,.silver-card-body { padding:15px; }
+            .silver-fields { grid-template-columns:1fr; gap:13px; }
+            .silver-section-title,.silver-field-wide { grid-column:1; }
+            .silver-actions { align-items:stretch; flex-direction:column; }
+            .silver-actions button { width:100%; }
+            #success { margin:0; text-align:center; }
+        }
+    </style>
+</head>
+<body>
+    <header class="silver-shell silver-header">
+        <p class="silver-kicker">Office tools · Jewellery estimates</p>
+        <div class="silver-heading-row">
+            <div><h1>Silver Estimate Form</h1><p>Capture net value, payments, and old silver details.</p></div>
+            <div class="live-clock"><span>Current time</span> · <span id="datetime"></span></div>
+        </div>
+    </header>
+    <main class="silver-shell">
+        <section class="silver-card">
+            <div class="silver-card-heading"><div><h2>New estimate</h2><p>Enter the details below. Calculated amounts update as you type.</p></div></div>
+            <div class="silver-card-body">
+                <form action="#" method="post" name="submit-to-google-sheet">
+                    {% csrf_token %}
+                    <input type="hidden" id="dateInput" name="Date" value="">
+                    <input type="hidden" id="liveTimeInput" name="Time" value="">
+                    <div class="silver-fields">
+                        <div class="silver-section-title">Estimate details</div>
+                        <div class="silver-field"><label for="est3">K Pad No.</label><input type="text" id="est3" name="K Pad No" autocomplete="off"></div>
+                        <div class="silver-field"><label for="netValue">Net Value</label><input type="number" id="netValue" name="Net Value" step="0.01" value=""></div>
+
+                        <div class="silver-section-title">Payments</div>
+                        <div class="silver-field"><label for="cashReceived">Cash Received</label><input type="number" id="cashReceived" name="Cash Received" step="0.01" value=""></div>
+                        <div class="silver-field"><label for="oldSilverPayment">Old Silver Payment</label><input type="number" id="oldSilverPayment" name="Old Silver Payment" step="0.01" value=""></div>
+                        <div class="silver-field"><label for="digitalPayment">GPay / Card / NEFT</label><input type="number" id="digitalPayment" name="GPay / Card / Neft" step="0.01" value=""></div>
+                        <div class="silver-field"><label for="chitAmount">Chit Amount</label><input type="number" id="chitAmount" name="Chit Amount" step="0.01" value=""></div>
+
+                        <div class="silver-section-title">Old silver details</div>
+                        <div class="silver-field"><label for="kSheetWeight">K Sheet Weight (g)</label><input type="number" id="kSheetWeight" name="K Sheet Weight(Grm)" step="0.001" value=""></div>
+                        <div class="silver-field"><label for="physicalWeight">Physical Weight (g)</label><input type="number" id="physicalWeight" name="Physical Weight(Grm)" step="0.001" value=""></div>
+                        <div class="silver-field"><label for="oldGoldValue">Old Gold Value</label><input type="number" id="oldGoldValue" name="Old Gold Value" step="0.01" value=""></div>
+                        <div class="silver-field silver-field-wide"><label for="remarks">Remarks</label><input type="text" id="remarks" name="Remarks" value="No Remarks" maxlength="500"></div>
+
+                        <div class="silver-section-title">Calculated amounts</div>
+                        <div class="silver-field"><label for="balancePaid">Balance Paid</label><input class="silver-calculated" type="number" id="balancePaid" name="Balance Paid" step="0.01" value="" readonly></div>
+                    </div>
+                    <div class="silver-actions">
+                        <button id="submitEstimate" type="submit" accesskey="s">Save Estimate</button>
+                        <button id="clearEstimate" type="reset" accesskey="c">Clear</button>
+                        <span id="success" role="status" aria-live="polite"></span>
+                    </div>
+                    <p class="shortcut-note">Shortcuts: Alt + S to save · Alt + C to clear · Alt + A / N to confirm · F5 to refresh</p>
+                </form>
+            </div>
+        </section>
+    </main>
+    <footer class="silver-shell silver-footer">Designed & Developed by Pavithran</footer>
+    <div id="confirmationModal" role="dialog" aria-modal="true" aria-labelledby="balancePaidText">
+        <div class="confirm-dialog">
+            <p id="balancePaidText"></p>
+            <p>Are you sure you want to submit this estimate?</p>
+            <div class="confirm-actions"><button type="button" accesskey="a" id="confirmYes">Yes, save</button><button type="button" accesskey="n" id="confirmNo">Cancel</button></div>
+        </div>
+    </div>
+    <script>
+        // Function to convert lowercase to uppercase
+        function convertToUpperCase() {
+            let inputElement = document.getElementById("est3");
+            inputElement.value = inputElement.value.toUpperCase();
+        }
+        document.addEventListener('input', convertToUpperCase);
+
+        // Function to Store Backend Live Time
+        function updateLiveTimeInput() {
+            var currentTime = new Date();
+            var formattedTime = [currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds()]
+                .map(value => String(value).padStart(2, '0')).join(':');
+            document.getElementById("liveTimeInput").value = formattedTime;
+        }
+
+        // Update live time every second
+        setInterval(updateLiveTimeInput, 1000);
+
+        // Initial call to display time immediately
+        updateLiveTimeInput();
+        
+        // Function to set the default value as the current date
+        function setDefaultDate() {
+            var currentDate = new Date();
+            var formattedDate = [currentDate.getFullYear(), String(currentDate.getMonth() + 1).padStart(2, '0'), String(currentDate.getDate()).padStart(2, '0')].join('-');
+            document.getElementById('dateInput').value = formattedDate;
+        }
+
+        // Event listener to call the function when the page is loaded
+        document.addEventListener('DOMContentLoaded', setDefaultDate);
+        
+        // Function to update live time and date
+        function updateDateTime() {
+            const now = new Date();
+            const currentDateTime = now.toLocaleString();
+            document.querySelector('#datetime').textContent = currentDateTime;
+        }
+        
+        setInterval(updateDateTime, 1000);
+
+        // Variable Creation
+        const apiURL = "{% url 'silverEstimateCreateApi' %}";
+        const form = document.forms['submit-to-google-sheet'];
+        const submitButton = form.querySelector('button');
+        const netValueInput = form.querySelector('input[name="Net Value"]');
+        const cashInput = form.querySelector('input[name="Cash Received"]');
+        const balancePaidInput = form.querySelector('input[name="Balance Paid"]');
+        const success = document.getElementById('success');
+
+        async function readApiResponse(response) {
+            const body = await response.text();
+            let result;
+            try { result = body ? JSON.parse(body) : {}; }
+            catch (_) { throw new Error(`Server returned an unexpected response (HTTP ${response.status}). Check the Django server log.`); }
+            if (!response.ok) throw new Error(result.detail || JSON.stringify(result));
+            return result;
+        }
+        
+        // Function to calculate and update balance
+        function updateBalance() {
+            const netValue = parseFloat(netValueInput.value) || 0;
+            const cash = parseFloat(cashInput.value) || 0;
+            const balancePaid = cash - netValue;
+            balancePaidInput.value = balancePaid.toFixed(2);
+        }
+
+        // Add event listeners to both "Net Value" and "Cash" inputs
+        netValueInput.addEventListener('input', updateBalance);
+        cashInput.addEventListener('input', updateBalance);
+
+        // Event listener for keydown on the form
+        form.addEventListener('keydown', async function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const focusedElement = document.activeElement;
+                if (focusedElement === submitButton) {
+                    // Manually trigger the click event on the submit button
+                    submitButton.click();
+                    // Set focus on the "Yes" button in the confirmation modal
+                    document.getElementById('confirmYes').focus();
+                }
+                else if (focusedElement.id === 'confirmYes' || focusedElement.id === 'confirmNo') {
+                    focusedElement.click();
+                } 
+                else {
+                    const formElements = Array.from(form.elements);
+                    const currentIndex = formElements.indexOf(focusedElement);
+                    const nextIndex = currentIndex + 1;
+                    const nextInput = formElements[nextIndex];
+                    
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+            }
+        });
+
+        // Function to show a custom confirmation modal
+        function showConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            const balancePaidText = document.getElementById('balancePaidText');
+            
+            // Set the "Balance Paid" value in the modal
+            balancePaidText.textContent = `Your Balance Paid is ${balancePaidInput.value}`;
+            
+            modal.style.display = 'flex';
+            
+            return new Promise((resolve) => {
+                document.getElementById('confirmYes').onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(true);
+                };
+                document.getElementById('confirmNo').onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(false);
+                };
+                document.getElementById('confirmYes').focus();
+            });
+        }
+
+        // Event listener for form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitButton.disabled = true;
+            success.textContent = "";
+            try {
+                updateBalance();
+                const userConfirmed = await showConfirmationModal();
+                if (!userConfirmed) return;
+
+                const numericValue = name => Number(form.querySelector(`[name="${name}"]`).value) || 0;
+                const payload = {
+                    date: form.querySelector('[name="Date"]').value,
+                    time: form.querySelector('[name="Time"]').value,
+                    kPadNo: form.querySelector('[name="K Pad No"]').value.trim().toUpperCase(),
+                    netValue: numericValue('Net Value'),
+                    cashReceived: numericValue('Cash Received'),
+                    oldSilverPayment: numericValue('Old Silver Payment'),
+                    digitalPayment: numericValue('GPay / Card / Neft'),
+                    chitAmount: numericValue('Chit Amount'),
+                    kSheetWeight: numericValue('K Sheet Weight(Grm)'),
+                    physicalWeight: numericValue('Physical Weight(Grm)'),
+                    oldGoldValue: numericValue('Old Gold Value'),
+                    remarks: form.querySelector('[name="Remarks"]').value.trim()
+                };
+                const response = await fetch(apiURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await readApiResponse(response);
+                success.style.color = 'green';
+                success.textContent = `Estimate saved successfully (ID ${result.id}).`;
+                form.reset();
+                setDefaultDate();
+                updateLiveTimeInput();
+                updateBalance();
+                document.querySelector('input[name="K Pad No"]').focus();
+            } catch (error) {
+                success.textContent = `Unable to save estimate: ${error.message}`;
+                success.style.color = 'red';
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
