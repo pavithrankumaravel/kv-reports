@@ -285,7 +285,7 @@ def tkgBranchChainStockReport(request):
             AND b.ProName = 'CHAIN'
             AND (
                 d.CounterName IN (
-                    'KV BRANCH CHAINS', 
+                    'KV BRANCH CHAIN', 
                     'KV BRANCH HARAM', 
                     'KV BRANCH NECKLACE', 
                     'KV BRANCH BRACELET', 
