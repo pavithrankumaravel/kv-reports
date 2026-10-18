@@ -1008,9 +1008,23 @@ def ornamentWastageMaster(request):
 
     data = [dict(zip(columns, row)) for row in rows]
 
-    designers = sorted({d["DesignerName"] for d in data})
+    # Load selector values from the three company master databases, rather than
+    # deriving them from existing wastage rows (which may omit new names).
+    designers = set()
+    products = set()
+    for alias in ("defaultA", "db2A", "db3A"):
+        with connections[alias].cursor() as master_cursor:
+            master_cursor.execute("SELECT DISTINCT DesignerName FROM dbo.DesignerMaster WHERE DesignerName IS NOT NULL")
+            designers.update(row[0].strip() for row in master_cursor.fetchall() if row[0] and row[0].strip())
+            master_cursor.execute("SELECT DISTINCT ProName FROM dbo.Product WHERE ProName IS NOT NULL")
+            products.update(row[0].strip() for row in master_cursor.fetchall() if row[0] and row[0].strip())
 
-    return render(request, "ornamentWastageMaster.html", {"cursor": cursor, "datas": data, "designers": designers})
+    return render(request, "ornamentWastageMaster.html", {
+        "cursor": cursor,
+        "datas": data,
+        "designers": sorted(designers, key=str.casefold),
+        "products": sorted(products, key=str.casefold),
+    })
 
 # AJAX → Save purity data
 @api_view(["POST"])
@@ -1059,6 +1073,52 @@ def addOrnamentWastageMaster(request):
             ])
 
         return Response({"status": "success"})
+
+@api_view(["POST"])
+@csrf_protect
+def updateOrnamentWastageMaster(request):
+    auth_error = _require_purity_session(request)
+    if auth_error:
+        return auth_error
+
+    try:
+        wastage_id = int(request.POST.get("WastageID"))
+        from_weight = float(request.POST.get("FromGrossWt"))
+        to_weight = float(request.POST.get("ToGrossWt"))
+    except (TypeError, ValueError):
+        return Response({"error": "Enter a valid row ID and gross-weight range"}, status=400)
+
+    if from_weight < 0 or to_weight < from_weight:
+        return Response({"error": "From Gross Weight must be non-negative and no greater than To Gross Weight"}, status=400)
+
+    query = """
+        UPDATE CustomReport.dbo.OrnamentWastageMaster
+        SET DesignerName = %s,
+            ProductName = %s,
+            OrnamentName = %s,
+            FromGrossWt = %s,
+            ToGrossWt = %s,
+            WastagePercentageValue = %s,
+            WastageGramValue = %s,
+            MakingCharge = %s
+        WHERE WastageID = %s
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [
+            request.POST.get("DesignerName"),
+            request.POST.get("ProductName"),
+            request.POST.get("OrnamentName"),
+            from_weight,
+            to_weight,
+            request.POST.get("WastagePercent") or None,
+            request.POST.get("WastageGram") or None,
+            request.POST.get("MakingCharge") or None,
+            wastage_id,
+        ])
+        if cursor.rowcount == 0:
+            return Response({"error": "Wastage record was not found"}, status=404)
+
+    return Response({"status": "success"})
     
 def ornamentPurityFormReport(request):
 

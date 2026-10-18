@@ -18,8 +18,6 @@
 
     <!-- In your <head> -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
         #null {
@@ -36,7 +34,7 @@
         <h1>Ornament Wastage Master</h1>
         <div class="row">
             <div class="col-md-4">
-                <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addWastage">Add New Wastage</button>
+                <button class="btn btn-primary mb-3" id="addNewWastage" data-toggle="modal" data-target="#addWastage">Add New Wastage</button>
             </div>
             <div class="col-md-4"></div>
             <div class="col-md-4 text-align-end">
@@ -48,16 +46,17 @@
                 <div class="modal-content">
         
                     <div class="modal-header">
-                        <h5>Add New Wastage Details</h5>
+                        <h5 id="wastageModalTitle">Add New Wastage Details</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
         
                     <div class="modal-body">
                         <form>
                             {% csrf_token %}
+                            <input type="hidden" id="WastageID">
                             <div class="mb-3">
                                 <label>Designer Name</label>
-                                <select id="DesignerName" class="form-control">
+                                <select id="DesignerName" class="form-control searchable-master-select">
                                     <option value="">Select</option>
                                     {% for d in designers %}
                                         <option value="{{ d }}">{{ d }}</option>
@@ -67,7 +66,12 @@
         
                             <div class="mb-3">
                                 <label>Product Name</label>
-                                <input type="text" id="ProductName" class="form-control">
+                                <select id="ProductName" class="form-control searchable-master-select">
+                                    <option value="">Select</option>
+                                    {% for product in products %}
+                                        <option value="{{ product }}">{{ product }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
         
                             <div class="mb-3">
@@ -122,6 +126,7 @@
                     <th>Wastage (% value)</th>
                     <th>Wastage (g. value)</th>
                     <th>Making Charge</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -143,7 +148,8 @@
                         {% else %}
                             <td id="null">NULL</td>
                         {% endif%}
-                        <td>{{ data.MakingCharge }}</td>
+                        <td>{{ data.MakingCharge|default_if_none:"" }}</td>
+                        <td><button type="button" class="btn btn-sm btn-primary edit-wastage" data-id="{{ data.WastageID }}">Edit</button></td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -151,8 +157,8 @@
     </div>
 
     <!-- jQuery -->
-    <!-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/js/bootstrap-multiselect.min.js"></script>
     
@@ -173,12 +179,54 @@
 
     <script>
         $(document).ready(function () {
+            $('#addWastage').on('shown.bs.modal', function () {
+                $('.searchable-master-select').each(function () {
+                    if (!$(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2({
+                            width: '100%',
+                            placeholder: 'Search or select',
+                            allowClear: true,
+                            dropdownParent: $('#addWastage')
+                        });
+                    }
+                });
+            });
+
             $('#datatable').DataTable({
                 dom: '<"top"lfB>rt<"bottom"ip><"clear">',  // B: buttons, f: filtering, r: processing, t: table, i: info, p: pagination
                 buttons: [
                     'excel',
                     'print'
                 ]
+            });
+
+            $('#addNewWastage').on('click', function () {
+                $('#WastageID').val('');
+                $('#wastageModalTitle').text('Add New Wastage Details');
+                $('#saveWastage').text('Save');
+                $('#DesignerName, #ProductName').val('').trigger('change');
+                $('#OrnamentName, #FromGrossWt, #ToGrossWt, #WastagePercent, #WastageGram, #MakingCharge').val('');
+            });
+
+            $('#datatable').on('click', '.edit-wastage', function () {
+                var row = $(this).closest('tr');
+                var cells = row.children('td');
+                var percent = cells.eq(5).text().trim();
+                var grams = cells.eq(6).text().trim();
+                var makingCharge = cells.eq(7).text().trim();
+
+                $('#WastageID').val($(this).data('id'));
+                $('#DesignerName').val(cells.eq(0).text().trim()).trigger('change');
+                $('#ProductName').val(cells.eq(1).text().trim()).trigger('change');
+                $('#OrnamentName').val(cells.eq(2).text().trim());
+                $('#FromGrossWt').val(cells.eq(3).text().trim());
+                $('#ToGrossWt').val(cells.eq(4).text().trim());
+                $('#WastagePercent').val(percent && percent !== 'NULL' ? (Number(percent) * 100) : '');
+                $('#WastageGram').val(grams && grams !== 'NULL' ? grams.replace(/g$/i, '').trim() : '');
+                $('#MakingCharge').val(makingCharge === 'None' ? '' : makingCharge);
+                $('#wastageModalTitle').text('Edit Wastage Details');
+                $('#saveWastage').text('Save Changes');
+                $('#addWastage').modal('show');
             });
 
             $('#saveWastage').click(function(){
@@ -202,13 +250,15 @@
                     return;
                 }
 
+                var wastageId = $('#WastageID').val();
                 $.ajax({
 
                     type:'POST',
-                    url:"{% url 'addOrnamentWastageMaster' %}",
+                    url: wastageId ? "{% url 'updateOrnamentWastageMaster' %}" : "{% url 'addOrnamentWastageMaster' %}",
 
                     data:{
                         csrfmiddlewaretoken:'{{ csrf_token }}',
+                        WastageID:wastageId,
                         DesignerName:DesignerName,
                         ProductName:ProductName,
                         OrnamentName:OrnamentName,
@@ -220,7 +270,7 @@
                     },
 
                     success:function(){
-                        alert("Wastage Added Successfully");
+                        alert(wastageId ? "Wastage details updated successfully" : "Wastage added successfully");
                         location.reload();
                     },
                     error:function(xhr){
