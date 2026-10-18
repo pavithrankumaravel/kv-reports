@@ -1025,15 +1025,25 @@ def addOrnamentWastageMaster(request):
         DesignerName = request.POST.get("DesignerName")
         ProductName = request.POST.get("ProductName")
         OrnamentName = request.POST.get("OrnamentName")
-        GrossWt = request.POST.get("GrossWt")
+        FromGrossWt = request.POST.get("FromGrossWt")
+        ToGrossWt = request.POST.get("ToGrossWt")
         WastagePercent = request.POST.get("WastagePercent")
         WastageGram = request.POST.get("WastageGram")
         MakingCharge = request.POST.get("MakingCharge")
 
+        try:
+            from_weight = float(FromGrossWt)
+            to_weight = float(ToGrossWt)
+        except (TypeError, ValueError):
+            return Response({"error": "Enter valid from and to gross weights"}, status=400)
+        if from_weight < 0 or to_weight < from_weight:
+            return Response({"error": "From Gross Weight must be non-negative and no greater than To Gross Weight"}, status=400)
+
         query = """
         INSERT INTO CustomReport.dbo.OrnamentWastageMaster
-        (DesignerName, ProductName, OrnamentName, GrossWt, WastagePercentageValue, WastageGramValue, MakingCharge)
-        VALUES (%s,%s,%s,%s,%s,%s)
+        (DesignerName, ProductName, OrnamentName, FromGrossWt, ToGrossWt,
+         WastagePercentageValue, WastageGramValue, MakingCharge)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
         """
 
         with connection.cursor() as cursor:
@@ -1041,10 +1051,11 @@ def addOrnamentWastageMaster(request):
                 DesignerName,
                 ProductName,
                 OrnamentName,
-                GrossWt,
+                from_weight,
+                to_weight,
                 WastagePercent if WastagePercent else None,
                 WastageGram if WastageGram else None,
-                MakingCharge
+                MakingCharge if MakingCharge else None
             ])
 
         return Response({"status": "success"})
@@ -1057,7 +1068,7 @@ def ornamentPurityFormReport(request):
 
     # Fetch designer and ornament master data
     query1 = """
-        SELECT DesignerName, ProductName, OrnamentName, GrossWt,
+        SELECT DesignerName, ProductName, OrnamentName, FromGrossWt, ToGrossWt,
                WastagePercentageValue, WastageGramValue
         FROM CustomReport.dbo.OrnamentWastageMaster
     """
@@ -1072,9 +1083,10 @@ def ornamentPurityFormReport(request):
             "DesignerName": row[0],
             "ProductName": row[1],
             "OrnamentName": row[2],
-            "GrossWt": row[3],
-            "WastagePercentageValue": row[4],
-            "WastageGramValue": row[5],
+            "FromGrossWt": row[3],
+            "ToGrossWt": row[4],
+            "WastagePercentageValue": row[5],
+            "WastageGramValue": row[6],
         })
 
     # Fetch saved purity records
@@ -1185,24 +1197,25 @@ def submitOrnamentPurityForm(request):
         ReceiptPurity = float(request.data.get("ReceiptPurity"))
 
         query = """
-        SELECT TOP 1 GrossWt, WastagePercentageValue, WastageGramValue
+        SELECT TOP 1 FromGrossWt, ToGrossWt, WastagePercentageValue, WastageGramValue
         FROM CustomReport.dbo.OrnamentWastageMaster
         WHERE DesignerName = %s
         AND ProductName = %s
         AND OrnamentName = %s
-        ORDER BY ABS(GrossWt - %s)
+        AND FromGrossWt <= %s
+        AND ToGrossWt >= %s
+        ORDER BY (ToGrossWt - FromGrossWt) ASC
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(query, [DesignerName, ProductName, OrnamentName, GrossWt])
+            cursor.execute(query, [DesignerName, ProductName, OrnamentName, GrossWt, GrossWt])
             row = cursor.fetchone()
 
         if row is None:
             return Response({"error": "No wastage rule found"}, status=400)
 
-        db_grosswt = float(row[0])
-        wastage_percent = row[1]
-        wastage_gram = row[2]
+        wastage_percent = row[2]
+        wastage_gram = row[3]
 
         getcontext().prec = 3
 

@@ -76,8 +76,13 @@
                             </div>
         
                             <div class="mb-3">
-                                <label>Gross Weight</label>
-                                <input type="number" id="GrossWt" class="form-control">
+                                <label>From Gross Weight</label>
+                                <input type="number" id="FromGrossWt" class="form-control" min="0" step="0.001">
+                            </div>
+
+                            <div class="mb-3">
+                                <label>To Gross Weight</label>
+                                <input type="number" id="ToGrossWt" class="form-control" min="0" step="0.001">
                             </div>
         
                             <div class="mb-3">
@@ -92,7 +97,7 @@
         
                             <div class="mb-3">
                                 <label>Making Charge</label>
-                                <input type="number" id="MakingCharge" class="form-control">
+                                <input type="number" id="MakingCharge" class="form-control" min="0" step="0.001">
                             </div>
         
                             <div class="modal-footer">
@@ -112,7 +117,8 @@
                     <th>Designer Name</th>
                     <th>Product Name</th>
                     <th>Ornament Name</th>
-                    <th>Gross Weight</th>
+                    <th>From Gross Weight</th>
+                    <th>To Gross Weight</th>
                     <th>Wastage (% value)</th>
                     <th>Wastage (g. value)</th>
                     <th>Making Charge</th>
@@ -124,7 +130,8 @@
                         <td>{{ data.DesignerName }}</td>
                         <td>{{ data.ProductName }}</td>
                         <td>{{ data.OrnamentName }}</td>
-                        <td>{{ data.GrossWt }}</td>
+                        <td>{{ data.FromGrossWt }}</td>
+                        <td>{{ data.ToGrossWt }}</td>
                         {% if data.WastagePercentageValue %}
                             <td>{{ data.WastagePercentageValue }}</td>
                         {% else %}
@@ -179,13 +186,19 @@
                 var DesignerName = $('#DesignerName').val();
                 var ProductName = $('#ProductName').val();
                 var OrnamentName = $('#OrnamentName').val();
-                var GrossWt = $('#GrossWt').val();
-                var WastagePercent = ($('#WastagePercent').val())/100;
+                var FromGrossWt = $('#FromGrossWt').val();
+                var ToGrossWt = $('#ToGrossWt').val();
+                var WastagePercentInput = $('#WastagePercent').val();
+                var WastagePercent = WastagePercentInput === '' ? '' : Number(WastagePercentInput) / 100;
                 var WastageGram = $('#WastageGram').val();
                 var MakingCharge = $('#MakingCharge').val();
 
-                if(DesignerName=="" || ProductName=="" || OrnamentName=="" || GrossWt==""){
+                if(DesignerName=="" || ProductName=="" || OrnamentName=="" || FromGrossWt=="" || ToGrossWt==""){
                     alert("Please fill required fields");
+                    return;
+                }
+                if (Number(FromGrossWt) > Number(ToGrossWt)) {
+                    alert("From Gross Weight cannot be greater than To Gross Weight");
                     return;
                 }
 
@@ -199,7 +212,8 @@
                         DesignerName:DesignerName,
                         ProductName:ProductName,
                         OrnamentName:OrnamentName,
-                        GrossWt:GrossWt,
+                        FromGrossWt:FromGrossWt,
+                        ToGrossWt:ToGrossWt,
                         WastagePercent:WastagePercent,
                         WastageGram:WastageGram,
                         MakingCharge:MakingCharge
@@ -208,6 +222,12 @@
                     success:function(){
                         alert("Wastage Added Successfully");
                         location.reload();
+                    },
+                    error:function(xhr){
+                        var message = xhr.responseJSON && xhr.responseJSON.error
+                            ? xhr.responseJSON.error
+                            : "Could not save wastage details. Check the server response and database schema.";
+                        alert(message);
                     }
 
                 });
