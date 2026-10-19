@@ -16,9 +16,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/css/bootstrap-multiselect.css">
 
-    <!-- In your <head> -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
     <style>
         #null {
             background-color: #ffffe1;
@@ -56,7 +53,7 @@
                             <input type="hidden" id="WastageID">
                             <div class="mb-3">
                                 <label>Designer Name</label>
-                                <select id="DesignerName" class="form-control searchable-master-select">
+                                <select id="DesignerName" class="form-control">
                                     <option value="">Select</option>
                                     {% for d in designers %}
                                         <option value="{{ d }}">{{ d }}</option>
@@ -66,12 +63,7 @@
         
                             <div class="mb-3">
                                 <label>Product Name</label>
-                                <select id="ProductName" class="form-control searchable-master-select">
-                                    <option value="">Select</option>
-                                    {% for product in products %}
-                                        <option value="{{ product }}">{{ product }}</option>
-                                    {% endfor %}
-                                </select>
+                                <input type="text" id="ProductName" class="form-control">
                             </div>
         
                             <div class="mb-3">
@@ -158,7 +150,6 @@
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/js/bootstrap-multiselect.min.js"></script>
     
@@ -179,19 +170,6 @@
 
     <script>
         $(document).ready(function () {
-            $('#addWastage').on('shown.bs.modal', function () {
-                $('.searchable-master-select').each(function () {
-                    if (!$(this).hasClass('select2-hidden-accessible')) {
-                        $(this).select2({
-                            width: '100%',
-                            placeholder: 'Search or select',
-                            allowClear: true,
-                            dropdownParent: $('#addWastage')
-                        });
-                    }
-                });
-            });
-
             $('#datatable').DataTable({
                 dom: '<"top"lfB>rt<"bottom"ip><"clear">',  // B: buttons, f: filtering, r: processing, t: table, i: info, p: pagination
                 buttons: [
@@ -204,7 +182,8 @@
                 $('#WastageID').val('');
                 $('#wastageModalTitle').text('Add New Wastage Details');
                 $('#saveWastage').text('Save');
-                $('#DesignerName, #ProductName').val('').trigger('change');
+                $('#DesignerName').val('');
+                $('#ProductName').val('');
                 $('#OrnamentName, #FromGrossWt, #ToGrossWt, #WastagePercent, #WastageGram, #MakingCharge').val('');
             });
 
@@ -216,8 +195,8 @@
                 var makingCharge = cells.eq(7).text().trim();
 
                 $('#WastageID').val($(this).data('id'));
-                $('#DesignerName').val(cells.eq(0).text().trim()).trigger('change');
-                $('#ProductName').val(cells.eq(1).text().trim()).trigger('change');
+                $('#DesignerName').val(cells.eq(0).text().trim());
+                $('#ProductName').val(cells.eq(1).text().trim());
                 $('#OrnamentName').val(cells.eq(2).text().trim());
                 $('#FromGrossWt').val(cells.eq(3).text().trim());
                 $('#ToGrossWt').val(cells.eq(4).text().trim());

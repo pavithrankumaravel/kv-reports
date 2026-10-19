@@ -1008,22 +1008,12 @@ def ornamentWastageMaster(request):
 
     data = [dict(zip(columns, row)) for row in rows]
 
-    # Load selector values from the three company master databases, rather than
-    # deriving them from existing wastage rows (which may omit new names).
-    designers = set()
-    products = set()
-    for alias in ("defaultA", "db2A", "db3A"):
-        with connections[alias].cursor() as master_cursor:
-            master_cursor.execute("SELECT DISTINCT DesignerName FROM dbo.DesignerMaster WHERE DesignerName IS NOT NULL")
-            designers.update(row[0].strip() for row in master_cursor.fetchall() if row[0] and row[0].strip())
-            master_cursor.execute("SELECT DISTINCT ProName FROM dbo.Product WHERE ProName IS NOT NULL")
-            products.update(row[0].strip() for row in master_cursor.fetchall() if row[0] and row[0].strip())
+    designers = sorted({d["DesignerName"] for d in data if d.get("DesignerName")})
 
     return render(request, "ornamentWastageMaster.html", {
         "cursor": cursor,
         "datas": data,
-        "designers": sorted(designers, key=str.casefold),
-        "products": sorted(products, key=str.casefold),
+        "designers": designers,
     })
 
 # AJAX → Save purity data
