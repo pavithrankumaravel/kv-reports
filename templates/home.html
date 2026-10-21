@@ -108,6 +108,23 @@
         .section-heading { justify-content: space-between; gap: 16px; margin-bottom: 19px; }
         .section-heading h2 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
         .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+        .guide-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            flex: 0 0 auto;
+            padding: 10px 14px;
+            border: 1px solid #d8e1ef;
+            border-radius: 9px;
+            background: #fff;
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 650;
+            text-decoration: none;
+            box-shadow: 0 3px 10px #14243b08;
+        }
+        .guide-download:hover { border-color: #b7c8e4; color: #175bd1; }
+        .guide-download span { color: #175bd1; font-size: 11px; font-weight: 800; }
         .report-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
         .report-card {
             overflow: hidden;
@@ -209,6 +226,9 @@
                 <h2>Reports &amp; tools</h2>
                 <p>Choose a page to get started.</p>
             </div>
+            <a class="guide-download" href="{% static 'docs/kv-reports-user-guide.pdf' %}" target="_blank" rel="noopener">
+                <span aria-hidden="true">PDF</span> Open user guide
+            </a>
         </div>
 
         <div class="report-groups">
