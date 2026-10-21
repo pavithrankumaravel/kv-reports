@@ -141,7 +141,10 @@
                             <td id="null">NULL</td>
                         {% endif%}
                         <td>{{ data.MakingCharge|default_if_none:"" }}</td>
-                        <td><button type="button" class="btn btn-sm btn-primary edit-wastage" data-id="{{ data.WastageID }}">Edit</button></td>
+                        <td class="text-nowrap">
+                            <button type="button" class="btn btn-sm btn-primary edit-wastage" data-id="{{ data.WastageID }}">Edit</button>
+                            <button type="button" class="btn btn-sm btn-danger delete-wastage" data-id="{{ data.WastageID }}">Delete</button>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -206,6 +209,32 @@
                 $('#wastageModalTitle').text('Edit Wastage Details');
                 $('#saveWastage').text('Save Changes');
                 $('#addWastage').modal('show');
+            });
+
+            $('#datatable').on('click', '.delete-wastage', function () {
+                var wastageId = $(this).data('id');
+                if (!wastageId || !confirm('Delete this wastage record? This action cannot be undone.')) {
+                    return;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'deleteOrnamentWastageMaster' %}",
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        WastageID: wastageId
+                    },
+                    success: function () {
+                        alert('Wastage record deleted successfully');
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        var message = xhr.responseJSON && xhr.responseJSON.error
+                            ? xhr.responseJSON.error
+                            : 'Could not delete the wastage record.';
+                        alert(message);
+                    }
+                });
             });
 
             $('#saveWastage').click(function(){

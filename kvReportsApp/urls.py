@@ -23,6 +23,7 @@ urlpatterns = [
     path('ornamentPurityFormReport/', ornamentPurityFormReport, name="ornamentPurityFormReport"),
     path('api/purity/wastage/', addOrnamentWastageMaster, name="addOrnamentWastageMaster"),
     path('api/purity/wastage/update/', updateOrnamentWastageMaster, name="updateOrnamentWastageMaster"),
+    path('api/purity/wastage/delete/', deleteOrnamentWastageMaster, name="deleteOrnamentWastageMaster"),
     path("api/purity/products/", get_products, name="getProductsApi"),
     path("api/purity/ornaments/", get_ornaments, name="getOrnamentsApi"),
     path("api/purity/delete/", deleteOrnamentPurity, name="deleteOrnamentPurity"),

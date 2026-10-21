@@ -1109,6 +1109,28 @@ def updateOrnamentWastageMaster(request):
             return Response({"error": "Wastage record was not found"}, status=404)
 
     return Response({"status": "success"})
+
+@api_view(["POST"])
+@csrf_protect
+def deleteOrnamentWastageMaster(request):
+    auth_error = _require_purity_session(request)
+    if auth_error:
+        return auth_error
+
+    try:
+        wastage_id = int(request.data.get("WastageID"))
+    except (TypeError, ValueError):
+        return Response({"error": "A valid wastage record ID is required"}, status=400)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM CustomReport.dbo.OrnamentWastageMaster WHERE WastageID = %s",
+            [wastage_id],
+        )
+        if cursor.rowcount == 0:
+            return Response({"error": "Wastage record was not found"}, status=404)
+
+    return Response({"status": "success"})
     
 def ornamentPurityFormReport(request):
 
