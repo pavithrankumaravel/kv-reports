@@ -224,7 +224,7 @@
                     return;
                 }
 
-                ownerLessAmountInput.value = Math.round(weight * (wastagePercent / 100) * goldRate - ownerLessAmountDeduction);
+                ownerLessAmountInput.value = Math.round(weight * (wastagePercent / 100) * goldRate + ownerLessAmountDeduction);
                 updateOwnerLessDifference();
             }
 

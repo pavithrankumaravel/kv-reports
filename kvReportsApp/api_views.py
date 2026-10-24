@@ -39,7 +39,7 @@ def _copy_validated_data_to_post(request, validated_data, extra=None):
 def _gold_estimate_less_values(values):
     owner_less_amount = (
         values["productWeight"] * values["ownerLessWastage"] * values["goldRate"] / Decimal("100")
-        - values["ownerLessAmountDeduction"]
+        + values["ownerLessAmountDeduction"]
     ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
     hude = values["rAmount"] + values["chitAmount"] + values["digitalPayment"] + values["oldValue"]
     balance_paid = values["cashReceived"] - values["rAmount"]
