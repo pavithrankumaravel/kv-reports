@@ -265,9 +265,17 @@
                 }
                 payload.results.forEach(record => {
                     recordsById.set(Number(record.id), record);
-                    table.row.add(columns.map(column => column.key === "actions"
-                        ? `<div class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary edit-entry" data-id="${Number(record.id)}">Edit</button> <button type="button" class="btn btn-sm btn-outline-danger delete-entry" data-id="${Number(record.id)}">Delete</button></div>`
-                        : escapeCell(record[column.key])));
+                    table.row.add(columns.map(column => {
+                        if (column.key === "actions") {
+                            return `<div class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary edit-entry" data-id="${Number(record.id)}">Edit</button> <button type="button" class="btn btn-sm btn-outline-danger delete-entry" data-id="${Number(record.id)}">Delete</button></div>`;
+                        }
+                        if (column.format === "signedDifference" && record[column.key] != null) {
+                            const difference = Number(record[column.key]);
+                            const isPositive = difference > 0;
+                            return `<span style="color:${isPositive ? '#16803c' : '#c62828'};font-weight:700">${isPositive ? '+' : '-'}${Math.abs(difference).toFixed(2)}</span>`;
+                        }
+                        return escapeCell(record[column.key]);
+                    }));
                 });
                 table.draw();
                 showStatus(`${payload.results.length} estimate(s) loaded.`);

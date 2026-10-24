@@ -3,6 +3,7 @@ from django.db import DatabaseError, connections
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from decimal import Decimal, ROUND_HALF_UP
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,6 +34,18 @@ def _copy_validated_data_to_post(request, validated_data, extra=None):
     for key, value in (extra or {}).items():
         post_data[key] = str(value)
     request._request.POST = post_data
+
+
+def _gold_estimate_less_values(values):
+    owner_less_amount = (
+        values["productWeight"] * values["ownerLessWastage"] * values["goldRate"] / Decimal("100")
+        - values["ownerLessAmountDeduction"]
+    ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    hude = values["rAmount"] + values["chitAmount"] + values["digitalPayment"] + values["oldValue"]
+    balance_paid = values["cashReceived"] - values["rAmount"]
+    less_amount = (values["invoiceAmount"] + values["gst"]) - (hude - values["oldGoldPayment"])
+    owner_less_difference = owner_less_amount - less_amount
+    return hude, balance_paid, less_amount, owner_less_amount, owner_less_difference
 
 
 def _estimate_range_sql(date_values):
@@ -216,7 +229,9 @@ class GoldEstimateAPI(APIView):
         date_values = date_filter.validated_data
         where_clause, params = _estimate_range_sql(date_values)
         columns = (
-            "GoldEstimateID, EstimateDate, EstimateTime, KPadNo, Item, InvoiceAmount, GST, "
+            "GoldEstimateID, EstimateDate, EstimateTime, KPadNo, Item, ProductWeight, "
+            "OwnerLessWastage, OwnerLessAmountDeduction, GoldRate, OwnerLessAmount, "
+            "OwnerLessDifference, InvoiceAmount, GST, "
             "RAmount, OldGoldPayment, CashReceived, DigitalPayment, ChitAmount, OldOrnament, "
             "OldKDye, OldOtherDye, OldValue, Hude, BalancePaid, LessAmount, Remarks"
         )
@@ -232,7 +247,9 @@ class GoldEstimateAPI(APIView):
         except DatabaseError:
             return Response({"detail": "Could not read CustomReport.dbo.GoldEstimate. Check the table and Django server log."}, status=503)
         keys = (
-            "id", "date", "time", "kPadNo", "item", "invoiceAmount", "gst", "rAmount",
+            "id", "date", "time", "kPadNo", "item", "productWeight", "ownerLessWastage",
+            "ownerLessAmountDeduction", "goldRate", "ownerLessAmount", "ownerLessDifference",
+            "invoiceAmount", "gst", "rAmount",
             "oldGoldPayment", "cashReceived", "digitalPayment", "chitAmount", "oldOrnament",
             "oldKDye", "oldOtherDye", "oldValue", "hude", "balancePaid", "lessAmount", "remarks",
         )
@@ -245,11 +262,12 @@ class GoldEstimateAPI(APIView):
         serializer = GoldEstimateInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
-        hude = values["rAmount"] + values["chitAmount"] + values["digitalPayment"] + values["oldValue"]
-        balance_paid = values["cashReceived"] - values["rAmount"]
-        less_amount = (values["invoiceAmount"] + values["gst"]) - (hude - values["oldGoldPayment"])
+        hude, balance_paid, less_amount, owner_less_amount, owner_less_difference = _gold_estimate_less_values(values)
         params = [
             values["date"], values["time"], hude, values["kPadNo"].strip().upper(), values["item"],
+            values["productWeight"], values["ownerLessWastage"],
+            values["ownerLessAmountDeduction"], values["goldRate"],
+            owner_less_amount, owner_less_difference,
             values["invoiceAmount"], values["gst"], values["rAmount"], values["oldGoldPayment"],
             values["cashReceived"], values["digitalPayment"], values["chitAmount"],
             values["oldOrnament"], values["oldKDye"], values["oldOtherDye"], values["oldValue"],
@@ -258,11 +276,13 @@ class GoldEstimateAPI(APIView):
         with connections["custom_report"].cursor() as cursor:
             cursor.execute("""
                 INSERT INTO CustomReport.dbo.GoldEstimate
-                    (EstimateDate, EstimateTime, Hude, KPadNo, Item, InvoiceAmount, GST,
+                    (EstimateDate, EstimateTime, Hude, KPadNo, Item, ProductWeight,
+                     OwnerLessWastage, OwnerLessAmountDeduction, GoldRate, OwnerLessAmount,
+                     OwnerLessDifference, InvoiceAmount, GST,
                      RAmount, OldGoldPayment, CashReceived, DigitalPayment, ChitAmount,
                      OldOrnament, OldKDye, OldOtherDye, OldValue, Remarks, BalancePaid, LessAmount)
                 OUTPUT INSERTED.GoldEstimateID
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, params)
             estimate_id = cursor.fetchone()[0]
         return Response({"status": "success", "id": estimate_id}, status=201)
@@ -275,11 +295,12 @@ class GoldEstimateAPI(APIView):
         serializer = GoldEstimateInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
-        hude = values["rAmount"] + values["chitAmount"] + values["digitalPayment"] + values["oldValue"]
-        balance_paid = values["cashReceived"] - values["rAmount"]
-        less_amount = (values["invoiceAmount"] + values["gst"]) - (hude - values["oldGoldPayment"])
+        hude, balance_paid, less_amount, owner_less_amount, owner_less_difference = _gold_estimate_less_values(values)
         params = [
             values["date"], values["time"], hude, values["kPadNo"].strip().upper(), values["item"],
+            values["productWeight"], values["ownerLessWastage"],
+            values["ownerLessAmountDeduction"], values["goldRate"],
+            owner_less_amount, owner_less_difference,
             values["invoiceAmount"], values["gst"], values["rAmount"], values["oldGoldPayment"],
             values["cashReceived"], values["digitalPayment"], values["chitAmount"],
             values["oldOrnament"], values["oldKDye"], values["oldOtherDye"], values["oldValue"],
@@ -289,6 +310,9 @@ class GoldEstimateAPI(APIView):
             cursor.execute("""
                 UPDATE CustomReport.dbo.GoldEstimate
                 SET EstimateDate = %s, EstimateTime = %s, Hude = %s, KPadNo = %s, Item = %s,
+                    ProductWeight = %s, OwnerLessWastage = %s,
+                    OwnerLessAmountDeduction = %s, GoldRate = %s,
+                    OwnerLessAmount = %s, OwnerLessDifference = %s,
                     InvoiceAmount = %s, GST = %s, RAmount = %s, OldGoldPayment = %s,
                     CashReceived = %s, DigitalPayment = %s, ChitAmount = %s, OldOrnament = %s,
                     OldKDye = %s, OldOtherDye = %s, OldValue = %s, Remarks = %s,

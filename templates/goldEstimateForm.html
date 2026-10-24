@@ -83,12 +83,16 @@
                     <div class="gold-fields">
                         <div class="gold-section-title">Estimate details</div>
                         <div class="gold-field"><label for="est3">K Pad No.</label><input type="text" id="est3" name="K Pad No" autocomplete="off"></div>
-                        <div class="gold-field"><label for="est1">Item</label><select name="Item" id="est1"><option value="">Select item</option><option value="Bangle">Bangle</option><option value="Bracelet">Bracelet</option><option value="Chain">Chain</option><option value="Coin">Gold Coin</option><option value="Dollar">Dollar</option><option value="Ring">Ring</option><option value="Thalimani">Thalimani</option><option value="Neclace">Necklace</option><option value="Nanal">Nanal</option><option value="Haram">Haram</option><option value="Stud">Stud</option><option value="Pesary">Pesary</option><option value="Extra">Extra</option><option value="Others">Others</option></select></div>
+                        <div class="gold-field"><label for="est1">Product</label><select name="Item" id="est1"><option value="">Select Product</option><option value="Bangle">Bangle</option><option value="Bracelet">Bracelet</option><option value="Chain">Chain</option><option value="Coin">Gold Coin</option><option value="Dollar">Dollar</option><option value="Ring">Ring</option><option value="Thalimani">Thalimani</option><option value="Neclace">Necklace</option><option value="Nanal">Nanal</option><option value="Haram">Haram</option><option value="Stud">Stud</option><option value="Pesary">Pesary</option><option value="Extra">Extra</option><option value="Others">Others</option></select></div>
+                        <div class="gold-field"><label for="productWeight">Product Weight</label><input type="number" id="productWeight" name="Product Weight" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="ownerLessWastage">Owner Less Wastage (percentage. %)</label><input type="number" id="ownerLessWastage" name="Owner Less Wastage" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="ownerLessAmountDeduction">Owner Less Amount</label><input type="number" id="ownerLessAmountDeduction" name="Owner Less Amount Deduction" min="0" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="goldRate">Gold Rate(per gram.)</label><input type="number" id="goldRate" name="Gold Rate" step="0.01" value=""></div>
                         <div class="gold-field"><label for="invoiceAmount">Invoice Amount</label><input type="number" id="invoiceAmount" name="Invoice Amount" step="0.01" value=""></div>
                         <div class="gold-field"><label for="gstAmount">GST</label><input type="number" id="gstAmount" name="GST" step="0.01" value=""></div>
 
                         <div class="gold-section-title">Payments</div>
-                        <div class="gold-field"><label for="rAmount">R Amount</label><input type="number" id="rAmount" name="R Amount" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="rAmount">Received Amount</label><input type="number" id="rAmount" name="R Amount" step="0.01" value=""></div>
                         <div class="gold-field"><label for="oldGoldPayment">Old Gold Payment</label><input type="number" id="oldGoldPayment" name="Old Gold Payment" step="0.01" value=""></div>
                         <div class="gold-field"><label for="cashReceived">Cash Received</label><input type="number" id="cashReceived" name="Cash Received" step="0.01" value=""></div>
                         <div class="gold-field"><label for="digitalPayment">GPay / Card / NEFT</label><input type="number" id="digitalPayment" name="GPay / Card / Neft" step="0.01" value=""></div>
@@ -104,6 +108,10 @@
                         <div class="gold-section-title">Calculated amounts</div>
                         <div class="gold-field"><label for="balancePaid">Balance Paid</label><input class="gold-calculated" type="number" id="balancePaid" name="Balance Paid" step="0.01" value=""></div>
                         <div class="gold-field"><label for="lessAmount">Less Amount</label><input class="gold-calculated" type="number" id="lessAmount" name="Less Amount" step="0.01" value=""></div>
+                        <div class="gold-field"><label for="OwnerLessAmount">Net Owner Less Amount</label><input class="gold-calculated" type="number" id="OwnerLessAmount" name="Net Owner Less Amount" step="1" value="" readonly aria-describedby="ownerLessAmountFormula">
+                            <!-- <small id="ownerLessAmountFormula" class="shortcut-note">(Product Weight × Wastage % ÷ 100 × Gold Rate) − Owner Less Amount</small> -->
+                        </div>
+                        <div class="gold-field"><label for="ownerLessDifference">Difference (Owner Less - Less Amount)</label><input class="gold-calculated" type="text" id="ownerLessDifference" name="Owner Less Difference" value="" readonly aria-live="polite"></div>
                     </div>
                     <div class="gold-actions">
                         <button id="submitEstimate" type="submit" accesskey="s">Save Estimate</button>
@@ -183,6 +191,47 @@
             const oldOrnInput = form.querySelector('input[name="Old Ornament"]');
             const oldDyeInput = form.querySelector('input[name="Old Other Dye"]');
             const oldKdyeInput = form.querySelector('input[name="Old K Dye"]');
+            const productWeightInput = document.getElementById('productWeight');
+            const ownerLessWastageInput = document.getElementById('ownerLessWastage');
+            const ownerLessAmountDeductionInput = document.getElementById('ownerLessAmountDeduction');
+            const goldRateInput = document.getElementById('goldRate');
+            const ownerLessAmountInput = document.getElementById('OwnerLessAmount');
+            const ownerLessDifferenceInput = document.getElementById('ownerLessDifference');
+
+            function updateOwnerLessDifference() {
+                if (ownerLessAmountInput.value === '' || lessAmtInput.value === '') {
+                    ownerLessDifferenceInput.value = '';
+                    ownerLessDifferenceInput.style.color = '';
+                    return;
+                }
+
+                const difference = Number(ownerLessAmountInput.value) - Number(lessAmtInput.value);
+                const isPositive = difference > 0;
+                ownerLessDifferenceInput.value = `${isPositive ? '+' : '-'}${Math.abs(difference).toFixed(2)}`;
+                ownerLessDifferenceInput.style.color = isPositive ? '#16803c' : '#c62828';
+            }
+
+            function calculateOwnerLessAmount() {
+                const weight = Number(productWeightInput.value);
+                const wastagePercent = Number(ownerLessWastageInput.value);
+                const ownerLessAmountDeduction = Number(ownerLessAmountDeductionInput.value) || 0;
+                const goldRate = Number(goldRateInput.value);
+                const inputsEntered = productWeightInput.value !== '' && ownerLessWastageInput.value !== '' && goldRateInput.value !== '';
+
+                if (!inputsEntered || ![weight, wastagePercent, goldRate].every(Number.isFinite)) {
+                    ownerLessAmountInput.value = '';
+                    updateOwnerLessDifference();
+                    return;
+                }
+
+                ownerLessAmountInput.value = Math.round(weight * (wastagePercent / 100) * goldRate - ownerLessAmountDeduction);
+                updateOwnerLessDifference();
+            }
+
+            [productWeightInput, ownerLessWastageInput, ownerLessAmountDeductionInput, goldRateInput].forEach(input => {
+                input.addEventListener('input', calculateOwnerLessAmount);
+            });
+            form.addEventListener('reset', () => setTimeout(updateOwnerLessDifference, 0));
 
             async function readApiResponse(response) {
                 const body = await response.text();
@@ -206,6 +255,7 @@
                 const lessAmt = (invAmt + gstAmt) - ( hudeAmt - ogpAmt );
                 hudeAmtInput.value = hudeAmt.toFixed(2);
                 lessAmtInput.value = lessAmt.toFixed(2);
+                updateOwnerLessDifference();
             }
             
             // Add event listeners to Less Amount
@@ -287,6 +337,7 @@
                 try {
                     lessAmount();
                     updateBalance();
+                    calculateOwnerLessAmount();
                     const userConfirmed = await showConfirmationModal(lessAmtInput.value);
                     if (!userConfirmed) return;
 
@@ -296,6 +347,10 @@
                         time: form.querySelector('[name="Time"]').value,
                         kPadNo: form.querySelector('[name="K Pad No"]').value.trim().toUpperCase(),
                         item: form.querySelector('[name="Item"]').value,
+                        productWeight: numericValue('Product Weight'),
+                        ownerLessWastage: numericValue('Owner Less Wastage'),
+                        ownerLessAmountDeduction: numericValue('Owner Less Amount Deduction'),
+                        goldRate: numericValue('Gold Rate'),
                         invoiceAmount: numericValue('Invoice Amount'), gst: numericValue('GST'),
                         rAmount: numericValue('R Amount'), oldGoldPayment: numericValue('Old Gold Payment'),
                         cashReceived: numericValue('Cash Received'), digitalPayment: numericValue('GPay / Card / Neft'),

@@ -59,6 +59,10 @@ class GoldEstimateInputSerializer(serializers.Serializer):
         "Bangle", "Bracelet", "Chain", "Coin", "Dollar", "Ring", "Thalimani",
         "Neclace", "Nanal", "Haram", "Stud", "Pesary", "Extra", "Others",
     ])
+    productWeight = serializers.DecimalField(max_digits=10, decimal_places=3, min_value=0, required=False, default=0)
+    ownerLessWastage = serializers.DecimalField(max_digits=7, decimal_places=4, min_value=0, required=False, default=0)
+    ownerLessAmountDeduction = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, default=0)
+    goldRate = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, default=0)
     invoiceAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
     gst = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
     rAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
@@ -113,6 +117,12 @@ class GoldEstimateRecordSerializer(serializers.Serializer):
     time = serializers.TimeField()
     kPadNo = serializers.CharField()
     item = serializers.CharField()
+    productWeight = serializers.DecimalField(max_digits=10, decimal_places=3, allow_null=True)
+    ownerLessWastage = serializers.DecimalField(max_digits=7, decimal_places=4, allow_null=True)
+    ownerLessAmountDeduction = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    goldRate = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    ownerLessAmount = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    ownerLessDifference = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
     invoiceAmount = serializers.DecimalField(max_digits=18, decimal_places=2)
     gst = serializers.DecimalField(max_digits=18, decimal_places=2)
     rAmount = serializers.DecimalField(max_digits=18, decimal_places=2)
