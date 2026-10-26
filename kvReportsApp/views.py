@@ -1,5 +1,7 @@
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.contrib.auth.views import redirect_to_login
+from django.utils.http import url_has_allowed_host_and_scheme
 from .api_utils import render
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_protect
@@ -968,6 +970,8 @@ def _require_purity_session(request):
 
 
 def login_view(request):
+    next_url = request.POST.get("next") or request.GET.get("next", "")
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -984,11 +988,17 @@ def login_view(request):
         if user:
             # Store session
             request.session['username'] = username
+            if next_url and url_has_allowed_host_and_scheme(
+                url=next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(next_url)
             return redirect('ornamentPurityFormReport')
         else:
-            return render(request, "login.html", {"error": "Invalid credentials"})
+            return render(request, "login.html", {"error": "Invalid credentials", "next": next_url})
 
-    return render(request, "login.html")
+    return render(request, "login.html", {"next": next_url})
 
 def logout_view(request):
     request.session.flush()
@@ -999,7 +1009,7 @@ def ornamentWastageMaster(request):
 
     # 🔒 Check session
     if not request.session.get('username'):
-        return redirect('/login/')
+        return redirect_to_login(request.get_full_path(), login_url=reverse('login'))
     
     with connection.cursor() as cursor:
         cursor.execute("""SELECT * FROM CustomReport.dbo.OrnamentWastageMaster;""")
@@ -1136,7 +1146,7 @@ def ornamentPurityFormReport(request):
 
     # 🔒 Check session
     if not request.session.get('username'):
-        return redirect('/login/')
+        return redirect_to_login(request.get_full_path(), login_url=reverse('login'))
 
     # Fetch designer and ornament master data
     query1 = """
