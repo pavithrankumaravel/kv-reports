@@ -218,6 +218,14 @@
                 "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
             })[character]);
         }
+        function formatTime12(value) {
+            const match = String(value ?? "").match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            if (!match) return value ?? "";
+            const hour24 = Number(match[1]);
+            const hour12 = hour24 % 12 || 12;
+            const period = hour24 >= 12 ? "PM" : "AM";
+            return `${String(hour12).padStart(2, "0")}:${match[2]}:${match[3] || "00"} ${period}`;
+        }
         async function loadReport() {
             const fromDate = document.getElementById("fromDate").value;
             const fromTime = document.getElementById("fromTime").value;
@@ -268,6 +276,9 @@
                     table.row.add(columns.map(column => {
                         if (column.key === "actions") {
                             return `<div class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary edit-entry" data-id="${Number(record.id)}">Edit</button> <button type="button" class="btn btn-sm btn-outline-danger delete-entry" data-id="${Number(record.id)}">Delete</button></div>`;
+                        }
+                        if (column.format === "time12") {
+                            return escapeCell(formatTime12(record[column.key]));
                         }
                         if (column.format === "signedDifference" && record[column.key] != null) {
                             const difference = Number(record[column.key]);

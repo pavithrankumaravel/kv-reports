@@ -1590,7 +1590,7 @@ def silverEstimateForm(request):
 
 def goldEstimateReport(request):
     columns = [
-        {"label": "Date", "key": "date"}, {"label": "Time", "key": "time"},
+        {"label": "Date", "key": "date"}, {"label": "Time", "key": "time", "format": "time12"},
         {"label": "K Pad No.", "key": "kPadNo"}, {"label": "Item", "key": "item"},
         {"label": "Product Weight", "key": "productWeight"},
         {"label": "Owner Less Wastage (%)", "key": "ownerLessWastage"},
@@ -1656,7 +1656,7 @@ def goldEstimateReport(request):
 
 def silverEstimateReport(request):
     columns = [
-        {"label": "Date", "key": "date"}, {"label": "Time", "key": "time"},
+        {"label": "Date", "key": "date"}, {"label": "Time", "key": "time", "format": "time12"},
         {"label": "K Pad No.", "key": "kPadNo"}, {"label": "Net Value", "key": "netValue"},
         {"label": "Cash Received", "key": "cashReceived"}, {"label": "Old Silver Payment", "key": "oldSilverPayment"},
         {"label": "GPay / Card / NEFT", "key": "digitalPayment"}, {"label": "Chit Amount", "key": "chitAmount"},
