@@ -55,6 +55,7 @@
                     <label>Supplier</label>
                     <select name="supplier" class="form-control" onchange="this.form.submit()" required>
                         <option value="">Select</option>
+                        <option value="ALL" {% if selectedSupplier == "ALL" %}selected{% endif %}>ALL</option>
                         {% for s in uniqueSuppliers %}
                             <option value="{{ s }}" {% if s == selectedSupplier %}selected{% endif %}>
                                 {{ s }}
@@ -91,9 +92,6 @@
                 <thead>
                     <tr>
                         <th>Sub Product</th>
-                        {% for gw in uniqueGrsWt %}
-                            <th>{{ gw }} g</th>
-                        {% endfor %}
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -101,9 +99,6 @@
                     {% for row in tableData %}
                     <tr>
                         <td>{{ row.sub }}</td>
-                        {% for v in row.values %}
-                            <td>{% if v %}{{ v }}{% endif %}</td>
-                        {% endfor %}
                         <td class="table-secondary"><b>{{ row.total }}</b></td>
                     </tr>
                     {% endfor %}
@@ -137,17 +132,6 @@
             });
         });
 
-        // ~~~~~~~~~~~~~~~~~~~~ This script clears the URL parameters and resets the form on page load ~~~~~~~~~~~~~~~~~~~~
-        window.addEventListener('load', function () {
-            // Clear URL parameters (if any)
-            if (window.location.search) {
-                const url = window.location.origin + window.location.pathname;
-                window.history.replaceState({}, document.title, url);
-            }
-        
-            // Reset the form
-            document.getElementById('filterForm').reset();
-        });
     </script>
 </body>
 </html>

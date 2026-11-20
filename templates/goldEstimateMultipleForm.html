@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'img/k.svg' %}" rel="icon">
+    <title>Kumaravilas | Gold Estimate Form (Multiple Product)</title>
+    <style>
+        :root { --ink:#1d2a3b; --muted:#738092; --line:#e5e8ed; --gold:#b58127; --gold-dark:#8b611a; --canvas:#f5f3ef; }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; background:var(--canvas); color:var(--ink); font-family:Inter,"Segoe UI",Arial,sans-serif; }
+        .gold-shell { width:min(1180px,calc(100% - 36px)); margin:0 auto; }
+        .gold-header { padding:30px 0 27px; }
+        .gold-kicker { margin:0 0 8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.17em; text-transform:uppercase; }
+        .heading-row { display:flex; justify-content:space-between; align-items:end; gap:20px; }
+        h1 { margin:0; color:var(--ink); font-size:clamp(30px,4vw,44px); letter-spacing:-.04em; }
+        .heading-row p { margin:8px 0 0; color:var(--muted); font-size:14px; }
+        .clock { padding:10px 13px; border:1px solid #e7dfce; border-radius:10px; background:#fffdfa; color:#6c5c3e; font-size:12px; font-weight:650; }
+        .card { margin-bottom:35px; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 12px 35px #352b190d; }
+        .card-heading { padding:17px 22px; border-bottom:1px solid var(--line); background:linear-gradient(110deg,#fffdf8,#fbf8f0); }
+        .card-heading h2 { margin:0; font-size:16px; }
+        .card-heading p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+        .card-body { padding:22px; }
+        .section-title { grid-column:1/-1; display:flex; align-items:center; gap:10px; margin:8px 0 0; color:#6f5424; font-size:13px; font-weight:800; }
+        .section-title::after { height:1px; flex:1; background:#ece4d3; content:""; }
+        .fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+        .field { min-width:0; }
+        .field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .field input,.field select { width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; }
+        .field input:focus,.field select:focus { outline:0; border-color:#d1ad69; box-shadow:0 0 0 .2rem #b581271a; }
+        .wide { grid-column:span 2; }
+        .product-picker { position:relative; }
+        .product-picker > label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .picker-trigger { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; text-align:left; cursor:pointer; }
+        .picker-trigger:hover,.picker-trigger[aria-expanded="true"] { border-color:#d1ad69; box-shadow:0 0 0 .2rem #b581271a; }
+        .picker-trigger .trigger-arrow { margin-left:10px; color:#657185; font-size:12px; }
+        .picker-panel { position:absolute; z-index:5; top:calc(100% + 5px); left:0; width:100%; max-height:270px; overflow:auto; padding:5px; border:1px solid #dce2e8; border-radius:8px; background:#fff; box-shadow:0 10px 25px #1d2a3b1c; }
+        .picker-panel[hidden] { display:none; }
+        .product-options { display:grid; gap:2px; }
+        .product-option { display:flex; align-items:center; gap:9px; min-height:35px; padding:7px 9px; border-radius:5px; color:var(--ink); font-size:14px; cursor:pointer; }
+        .product-option:hover { background:#f5f6f8; }
+        .product-option input { accent-color:var(--gold); }
+        .calculated { background:#f8f6f1 !important; color:#695832 !important; }
+        .actions { display:flex; align-items:center; gap:11px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f3; }
+        .actions button { min-height:43px; padding:10px 20px; border:1px solid transparent; border-radius:8px; font-size:13px; font-weight:750; cursor:pointer; }
+        #saveButton { min-width:155px; background:var(--gold); color:#fff; }
+        #saveButton:hover { background:var(--gold-dark); }
+        #clearButton { border-color:#d9dfe6; background:#fff; color:#465266; }
+        #status { margin-left:5px; font-size:13px; }
+        .note { margin:13px 0 0; color:#8490a0; font-size:11px; }
+        .footer { padding:0 0 20px; color:#8d929a; text-align:center; font-size:11px; }
+        @media(max-width:900px) { .fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:560px) {
+            .gold-shell { width:calc(100% - 22px); }
+            .gold-header { padding-top:21px; }
+            .heading-row { align-items:flex-start; flex-direction:column; gap:12px; }
+            .clock { width:100%; }
+            .card-body { padding:15px; }
+            .fields { grid-template-columns:1fr; gap:13px; }
+            .section-title,.wide { grid-column:1; }
+            .actions { align-items:stretch; flex-direction:column; }
+            .actions button { width:100%; }
+            #status { margin:0; text-align:center; }
+        }
+    </style>
+</head>
+<body>
+    <header class="gold-shell gold-header">
+        <p class="gold-kicker">Office tools · Jewellery estimates</p>
+        <div class="heading-row">
+            <div><h1>Gold Estimate Form (Multiple Product)</h1><p>Enter one estimate with multiple products.</p></div>
+            <div class="clock">Current time · <span id="clock"></span></div>
+        </div>
+    </header>
+    <main class="gold-shell">
+        <section class="card">
+            <div class="card-heading"><h2>New estimate</h2><p>Select one or more products. All selected products and estimate details are saved together in one report row.</p></div>
+            <div class="card-body">
+                <form id="multiEstimateForm">
+                    {% csrf_token %}
+                    <div class="fields">
+                        <div class="section-title">Estimate details</div>
+                        <div class="field"><label for="kPadNo">K Pad No.</label><input id="kPadNo" maxlength="50" autocomplete="off" required></div>
+                        <div class="product-picker" id="productPicker">
+                            <label for="productPickerToggle">Product</label>
+                            <button type="button" class="picker-trigger" id="productPickerToggle" aria-expanded="false" aria-controls="productPickerPanel">
+                                <span id="pickerSummary">Select Product</span><span class="trigger-arrow" aria-hidden="true">▾</span>
+                            </button>
+                            <div class="picker-panel" id="productPickerPanel" hidden>
+                                <div class="product-options" id="productOptions"></div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Invoice and payments</div>
+                        <div class="field"><label for="invoiceAmount">Invoice Amount</label><input type="number" id="invoiceAmount" step="0.01" value=""></div>
+                        <div class="field"><label for="gst">GST</label><input type="number" id="gst" step="0.01" value=""></div>
+                        <div class="field"><label for="rAmount">Received Amount</label><input type="number" id="rAmount" step="0.01" value=""></div>
+                        <div class="field"><label for="oldGoldPayment">Old Gold Payment</label><input type="number" id="oldGoldPayment" step="0.01" value=""></div>
+                        <div class="field"><label for="cashReceived">Cash Received</label><input type="number" id="cashReceived" step="0.01" value=""></div>
+                        <div class="field"><label for="digitalPayment">GPay / Card / NEFT</label><input type="number" id="digitalPayment" step="0.01" value=""></div>
+                        <div class="field"><label for="chitAmount">Chit Amount</label><input type="number" id="chitAmount" step="0.01" value=""></div>
+
+                        <div class="section-title">Old gold details</div>
+                        <div class="field"><label for="oldOrnament">Old Ornament (g)</label><input type="number" id="oldOrnament" step="0.001" value=""></div>
+                        <div class="field"><label for="oldKDye">Old K Dye (g)</label><input type="number" id="oldKDye" step="0.001" value=""></div>
+                        <div class="field"><label for="oldOtherDye">Old Other Dye (g)</label><input type="number" id="oldOtherDye" step="0.001" value=""></div>
+                        <div class="field"><label for="oldValue">Old Value</label><input type="number" id="oldValue" step="0.01" value=""></div>
+                        <div class="field wide"><label for="remarks">Remarks</label><input type="text" id="remarks" maxlength="500" value="No Remarks"></div>
+
+                        <div class="section-title">Calculated amounts</div>
+                        <div class="field"><label for="balancePaid">Balance Paid</label><input class="calculated" type="number" id="balancePaid" readonly></div>
+                        <div class="field"><label for="lessAmount">Less Amount</label><input class="calculated" type="number" id="lessAmount" readonly></div>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" id="saveButton">Save Estimate</button>
+                        <button type="reset" id="clearButton">Clear</button>
+                        <span id="status" role="status" aria-live="polite"></span>
+                    </div>
+                    <p class="note">Selected products are shown together in the Item column as one estimate record.</p>
+                </form>
+            </div>
+        </section>
+    </main>
+    <footer class="gold-shell footer">Designed &amp; Developed by Pavithran</footer>
+    {{ apiUrl|json_script:"multi-estimate-api-url" }}
+    <script>
+        const apiUrl = JSON.parse(document.getElementById("multi-estimate-api-url").textContent);
+        const form = document.getElementById("multiEstimateForm");
+        const productPicker = document.getElementById("productPicker");
+        const pickerToggle = document.getElementById("productPickerToggle");
+        const pickerPanel = document.getElementById("productPickerPanel");
+        const productOptions = document.getElementById("productOptions");
+        const selectedProducts = new Set();
+        const status = document.getElementById("status");
+        const productChoices = [
+            ["Bangle", "Bangle"], ["Bracelet", "Bracelet"], ["Chain", "Chain"],
+            ["Coin", "Gold Coin"], ["Dollar", "Dollar"], ["Ring", "Ring"],
+            ["Thalimani", "Thalimani"], ["Neclace", "Necklace"], ["Nanal", "Nanal"],
+            ["Haram", "Haram"], ["Stud", "Stud"], ["Pesary", "Pesary"],
+            ["Extra", "Extra"], ["Others", "Others"]
+        ];
+
+        function renderProducts() {
+            productOptions.replaceChildren();
+            productChoices.forEach(([value, title]) => {
+                const label = document.createElement("label");
+                label.className = "product-option";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = value;
+                checkbox.checked = selectedProducts.has(value);
+                checkbox.addEventListener("change", () => {
+                    checkbox.checked ? selectedProducts.add(value) : selectedProducts.delete(value);
+                    renderProducts();
+                });
+                const text = document.createElement("span");
+                text.textContent = title;
+                label.append(checkbox, text);
+                productOptions.appendChild(label);
+            });
+
+            const summary = document.getElementById("pickerSummary");
+            const selectedTitles = [...selectedProducts].map(value => productChoices.find(([choice]) => choice === value)?.[1] || value);
+            summary.textContent = selectedTitles.length ? selectedTitles.join(", ") : "Select Product";
+        }
+
+        function setPickerOpen(open) {
+            pickerPanel.hidden = !open;
+            pickerToggle.setAttribute("aria-expanded", String(open));
+            pickerToggle.setAttribute("aria-label", selectedProducts.size ? `${selectedProducts.size} products selected. Change selection` : "Select products");
+        }
+
+        function updateClock() {
+            document.getElementById("clock").textContent = new Date().toLocaleString();
+        }
+        function updateCalculatedAmounts() {
+            const number = id => Number(document.getElementById(id).value) || 0;
+            const hude = number("rAmount") + number("chitAmount") + number("digitalPayment") + number("oldValue");
+            document.getElementById("balancePaid").value = (number("cashReceived") - number("rAmount")).toFixed(2);
+            document.getElementById("lessAmount").value = (number("invoiceAmount") + number("gst") - (hude - number("oldGoldPayment"))).toFixed(2);
+        }
+
+        renderProducts();
+        updateClock();
+        updateCalculatedAmounts();
+        setInterval(updateClock, 1000);
+        pickerToggle.addEventListener("click", () => setPickerOpen(pickerPanel.hidden));
+        document.addEventListener("click", event => {
+            if (!productPicker.contains(event.target)) setPickerOpen(false);
+        });
+        productPicker.addEventListener("keydown", event => {
+            if (event.key === "Escape") { setPickerOpen(false); pickerToggle.focus(); }
+        });
+        form.addEventListener("input", updateCalculatedAmounts);
+        form.addEventListener("keydown", event => {
+            if (event.key !== "Enter") return;
+
+            const focused = document.activeElement;
+            if (focused.matches(".product-option input[type='checkbox']")) {
+                event.preventDefault();
+                focused.click();
+                return;
+            }
+            if (focused === pickerToggle) {
+                event.preventDefault();
+                setPickerOpen(pickerPanel.hidden);
+                return;
+            }
+
+            event.preventDefault();
+            if (focused === document.getElementById("saveButton")) {
+                document.getElementById("saveButton").click();
+                return;
+            }
+            if (focused === document.getElementById("clearButton")) {
+                document.getElementById("clearButton").click();
+                return;
+            }
+
+            const navigable = [...form.querySelectorAll("input:not([type='hidden']):not([type='checkbox']), select, textarea, button[type='submit'], button[type='reset']")]
+                .filter(element => !element.disabled && element.offsetParent !== null);
+            const next = navigable[navigable.indexOf(focused) + 1];
+            if (next) next.focus();
+        });
+        form.addEventListener("reset", () => setTimeout(() => {
+            selectedProducts.clear();
+            renderProducts();
+            setPickerOpen(false);
+            updateCalculatedAmounts();
+        }, 0));
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            const products = [...selectedProducts];
+            if (!products.length) {
+                status.style.color = "#c62828";
+                status.textContent = "Select at least one product.";
+                return;
+            }
+            if (!window.confirm(`Save this estimate with ${products.length} selected product(s)?`)) return;
+
+            const now = new Date();
+            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+            const number = id => Number(document.getElementById(id).value) || 0;
+            const payload = {
+                date: localDate.slice(0, 10),
+                time: [now.getHours(), now.getMinutes(), now.getSeconds()].map(value => String(value).padStart(2, "0")).join(":"),
+                kPadNo: document.getElementById("kPadNo").value.trim().toUpperCase(),
+                products,
+                invoiceAmount: number("invoiceAmount"), gst: number("gst"),
+                rAmount: number("rAmount"), oldGoldPayment: number("oldGoldPayment"),
+                cashReceived: number("cashReceived"), digitalPayment: number("digitalPayment"),
+                chitAmount: number("chitAmount"), oldOrnament: number("oldOrnament"),
+                oldKDye: number("oldKDye"), oldOtherDye: number("oldOtherDye"),
+                oldValue: number("oldValue"), remarks: document.getElementById("remarks").value.trim() || "No Remarks"
+            };
+            const saveButton = document.getElementById("saveButton");
+            saveButton.disabled = true;
+            status.style.color = "";
+            status.textContent = "Saving estimate...";
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const raw = await response.text();
+                let result;
+                try { result = raw ? JSON.parse(raw) : {}; }
+                catch (_) { throw new Error(`Unexpected server response (HTTP ${response.status}). Check the Django server log.`); }
+                if (!response.ok) throw new Error(result.detail || JSON.stringify(result));
+                status.style.color = "green";
+                status.textContent = `Saved one estimate row with ${products.join(", ")}.`;
+                form.reset();
+                selectedProducts.clear();
+                renderProducts();
+                updateCalculatedAmounts();
+            } catch (error) {
+                status.style.color = "#c62828";
+                status.textContent = `Unable to save estimate: ${error.message}`;
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

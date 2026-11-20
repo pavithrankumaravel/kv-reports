@@ -1,5 +1,5 @@
 from django.http import Http404, QueryDict
-from django.db import DatabaseError, connections
+from django.db import DatabaseError, connections, transaction
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -18,6 +18,7 @@ from .serializers import (
     EmployeeTimeSheetInputSerializer,
     EstimateDateRangeSerializer,
     GoldEstimateInputSerializer,
+    GoldEstimateMultipleInputSerializer,
     GoldEstimateRecordSerializer,
     ReportIndexSerializer,
     ReportPayloadSerializer,
@@ -340,6 +341,46 @@ class GoldEstimateAPI(APIView):
         if not row:
             return Response({"detail": "Gold estimate not found."}, status=404)
         return Response({"status": "success", "id": row[0]})
+
+
+@method_decorator(csrf_protect, name="dispatch")
+class GoldEstimateMultipleAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = GoldEstimateMultipleInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        item = ", ".join(values["products"])
+        hude = values["rAmount"] + values["chitAmount"] + values["digitalPayment"] + values["oldValue"]
+        balance_paid = values["cashReceived"] - values["rAmount"]
+        less_amount = (values["invoiceAmount"] + values["gst"]) - (hude - values["oldGoldPayment"])
+        params = [
+            values["date"], values["time"], hude, values["kPadNo"].strip().upper(), item,
+            None, None, None, None, None, None,
+            values["invoiceAmount"], values["gst"], values["rAmount"],
+            values["oldGoldPayment"], values["cashReceived"], values["digitalPayment"],
+            values["chitAmount"], values["oldOrnament"], values["oldKDye"],
+            values["oldOtherDye"], values["oldValue"], values["remarks"].strip() or "No Remarks",
+            balance_paid, less_amount,
+        ]
+
+        with transaction.atomic(using="custom_report"):
+            with connections["custom_report"].cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO CustomReport.dbo.GoldEstimate
+                        (EstimateDate, EstimateTime, Hude, KPadNo, Item, ProductWeight,
+                         OwnerLessWastage, OwnerLessAmountDeduction, GoldRate, OwnerLessAmount,
+                         OwnerLessDifference, InvoiceAmount, GST, RAmount, OldGoldPayment,
+                         CashReceived, DigitalPayment, ChitAmount, OldOrnament, OldKDye,
+                         OldOtherDye, OldValue, Remarks, BalancePaid, LessAmount)
+                    OUTPUT INSERTED.GoldEstimateID
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, params)
+                estimate_id = cursor.fetchone()[0]
+
+        return Response({"status": "success", "id": estimate_id, "ids": [estimate_id], "item": item}, status=201)
 
 
 @method_decorator(csrf_protect, name="dispatch")

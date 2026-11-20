@@ -780,8 +780,8 @@ def gpcSupplierWiseSaleReport(request):
 
     saleReport = [{
         "TranDate": r[0],
-        "Supplier": r[1],
-        "Product": r[2],
+        "Supplier": r[1].strip() if isinstance(r[1], str) else r[1],
+        "Product": r[2].strip() if isinstance(r[2], str) else r[2],
         "SubProduct": r[3],
         "GrossWt": r[4],
         "TagNo": r[5],
@@ -838,21 +838,26 @@ def gpcSupplierWiseSaleReport(request):
 
     # ------------------ FILTER DROPDOWNS ------------------
     
-    # Supplier depends ONLY on date range
-    unique_suppliers = []
-    if start_date and end_date:
-        unique_suppliers = sorted(
-            set(d["Supplier"] for d in data if d["Supplier"])
-        )
+    # Build filter options from the date-filtered sales query itself. The
+    # tag-reconciliation step above can omit sales that should still be
+    # available as filter choices.
+    unique_suppliers = sorted({
+        str(d["Supplier"]).strip()
+        for d in saleReport
+        if d["Supplier"] and str(d["Supplier"]).strip()
+    }) if start_date and end_date else []
 
-    # Product depends on date range + supplier
+    # Products depend on the date range and selected supplier; ALL includes
+    # products sold by any supplier in that period.
     unique_products = []
     if start_date and end_date and selected_supplier:
         unique_products = sorted(
             set(
                 d["Product"]
-                for d in data
-                if d["Supplier"] == selected_supplier
+                for d in saleReport
+                if d["Supplier"]
+                and (selected_supplier == "ALL" or str(d["Supplier"]).strip() == selected_supplier)
+                and d["Product"]
             )
         )
 
@@ -865,7 +870,7 @@ def gpcSupplierWiseSaleReport(request):
     if show_table:
         filtered = [
             d for d in data
-            if d["Supplier"] == selected_supplier
+            if (selected_supplier == "ALL" or d["Supplier"] == selected_supplier)
             and d["Product"] == selected_product
             and d["GrossWt"] not in (None, '')
             and str(d["GrossWt"]).replace('.', '', 1).isdigit()

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import *
-from .api_views import GoldEstimateAPI, SilverEstimateAPI
+from .api_views import GoldEstimateAPI, GoldEstimateMultipleAPI, SilverEstimateAPI
 
 urlpatterns = [
     path('', home, name="home"),
@@ -36,10 +36,12 @@ urlpatterns = [
 
     # Estimate pages:
     path("goldEstimateForm/", goldEstimateForm, name="goldEstimateForm"),
+    path("goldEstimateMultipleForm/", goldEstimateMultipleForm, name="goldEstimateMultipleForm"),
     path("silverEstimateForm/", silverEstimateForm, name="silverEstimateForm"),
     path("goldEstimateReport/", goldEstimateReport, name="goldEstimateReport"),
     path("silverEstimateReport/", silverEstimateReport, name="silverEstimateReport"),
     path("api/estimates/gold/", GoldEstimateAPI.as_view(), name="goldEstimateCreateApi"),
+    path("api/estimates/gold/multiple/", GoldEstimateMultipleAPI.as_view(), name="goldEstimateMultipleCreateApi"),
     path("api/estimates/gold/<int:estimate_id>/", GoldEstimateAPI.as_view(), name="goldEstimateDetailApi"),
     path("api/estimates/silver/", SilverEstimateAPI.as_view(), name="silverEstimateCreateApi"),
     path("api/estimates/silver/<int:estimate_id>/", SilverEstimateAPI.as_view(), name="silverEstimateDetailApi"),

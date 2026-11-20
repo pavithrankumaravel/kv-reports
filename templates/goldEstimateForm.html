@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
     <link href="{% static 'img/k.svg' %}" rel="icon">
-    <title>Kumaravilas | Gold Estimate Form</title>
+    <title>Kumaravilas | Gold Estimate Form (Single Product)</title>
     <style>
         :root { --ink:#1d2a3b; --muted:#738092; --line:#e5e8ed; --gold:#b58127; --gold-dark:#8b611a; --canvas:#f5f3ef; }
         * { box-sizing:border-box; }
@@ -27,6 +27,7 @@
         .gold-fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
         .gold-field { min-width:0; }
         .gold-field label { display:block; margin-bottom:6px; color:#465266; font-size:12px; font-weight:700; }
+        .calculation-help { display:block; margin-top:6px; color:var(--muted); font-size:11px; line-height:1.45; }
         .gold-field input,.gold-field select,.gold-field textarea { width:100%; min-height:43px; padding:9px 11px; border:1px solid #dce2e8; border-radius:8px; background:#fff; color:var(--ink); font:14px inherit; }
         .gold-field input:focus,.gold-field select:focus,.gold-field textarea:focus { outline:0; border-color:#d1ad69; box-shadow:0 0 0 .2rem #b581271a; }
         .gold-field textarea { min-height:43px; resize:vertical; }
@@ -67,7 +68,7 @@
     <header class="gold-shell gold-header">
         <p class="gold-kicker">Office tools · Jewellery estimates</p>
         <div class="gold-heading-row">
-            <div><h1>Gold Estimate Form</h1><p>Capture invoice, payment, and old gold details.</p></div>
+            <div><h1>Gold Estimate Form (Single Product)</h1><p>Capture invoice, payment, and old gold details.</p></div>
             <div class="live-clock"><span>Current time</span> · <span id="datetime"></span></div>
         </div>
     </header>
@@ -106,12 +107,26 @@
                         <div class="gold-field gold-field-wide"><label for="remarks">Remarks</label><input type="text" id="remarks" name="Remarks" value="No Remarks" maxlength="500"></div>
 
                         <div class="gold-section-title">Calculated amounts</div>
-                        <div class="gold-field"><label for="balancePaid">Balance Paid</label><input class="gold-calculated" type="number" id="balancePaid" name="Balance Paid" step="0.01" value=""></div>
-                        <div class="gold-field"><label for="lessAmount">Less Amount</label><input class="gold-calculated" type="number" id="lessAmount" name="Less Amount" step="0.01" value=""></div>
-                        <div class="gold-field"><label for="OwnerLessAmount">Net Owner Less Amount</label><input class="gold-calculated" type="number" id="OwnerLessAmount" name="Net Owner Less Amount" step="1" value="" readonly aria-describedby="ownerLessAmountFormula">
-                            <!-- <small id="ownerLessAmountFormula" class="shortcut-note">(Product Weight × Wastage % ÷ 100 × Gold Rate) − Owner Less Amount</small> -->
+                        <div class="gold-field">
+                            <label for="balancePaid">Balance Paid</label>
+                            <input class="gold-calculated" type="number" id="balancePaid" name="Balance Paid" step="0.01" value="">
+                            <small class="calculation-help">Cash Received − Received Amount (R Amount).</small>
                         </div>
-                        <div class="gold-field"><label for="ownerLessDifference">Difference (Owner Less - Less Amount)</label><input class="gold-calculated" type="text" id="ownerLessDifference" name="Owner Less Difference" value="" readonly aria-live="polite"></div>
+                        <div class="gold-field">
+                            <label for="lessAmount">Less Amount</label>
+                            <input class="gold-calculated" type="number" id="lessAmount" name="Less Amount" step="0.01" value="">
+                            <small class="calculation-help">Invoice Amount + GST − (Hude − Old Gold Payment). Hude = R Amount + Chit Amount + GPay / Card / NEFT + Old Value.</small>
+                        </div>
+                        <div class="gold-field">
+                            <label for="OwnerLessAmount">Net Owner Less Amount</label>
+                            <input class="gold-calculated" type="number" id="OwnerLessAmount" name="Net Owner Less Amount" step="1" value="" readonly aria-describedby="ownerLessAmountFormula">
+                            <small id="ownerLessAmountFormula" class="calculation-help">Rounded to a whole amount: (Product Weight × Owner Less Wastage % ÷ 100 × Gold Rate) + Owner Less Amount.</small>
+                        </div>
+                        <div class="gold-field">
+                            <label for="ownerLessDifference">Difference (Owner Less - Less Amount)</label>
+                            <input class="gold-calculated" type="text" id="ownerLessDifference" name="Owner Less Difference" value="" readonly aria-live="polite">
+                            <small class="calculation-help">Net Owner Less Amount − Less Amount. Positive values show green; negative values show red.</small>
+                        </div>
                     </div>
                     <div class="gold-actions">
                         <button id="submitEstimate" type="submit" accesskey="s">Save Estimate</button>

@@ -4,6 +4,11 @@ from datetime import datetime, time
 from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import serializers
 
+GOLD_PRODUCT_CHOICES = (
+    "Bangle", "Bracelet", "Chain", "Coin", "Dollar", "Ring", "Thalimani",
+    "Neclace", "Nanal", "Haram", "Stud", "Pesary", "Extra", "Others",
+)
+
 
 class ReportDataField(serializers.Field):
     """Convert report context values (dates, decimals, defaultdicts) to JSON primitives."""
@@ -55,14 +60,42 @@ class GoldEstimateInputSerializer(serializers.Serializer):
     date = serializers.DateField(input_formats=["%Y-%m-%d"])
     time = serializers.TimeField(input_formats=["%H:%M:%S", "%H:%M"])
     kPadNo = serializers.CharField(max_length=50, allow_blank=True, required=False, default="")
-    item = serializers.ChoiceField(choices=[
-        "Bangle", "Bracelet", "Chain", "Coin", "Dollar", "Ring", "Thalimani",
-        "Neclace", "Nanal", "Haram", "Stud", "Pesary", "Extra", "Others",
-    ])
+    item = serializers.CharField(max_length=200)
+
+    def validate_item(self, value):
+        items = [item.strip() for item in value.split(",")]
+        if not items or any(item not in GOLD_PRODUCT_CHOICES for item in items):
+            raise serializers.ValidationError("Choose a valid gold product or product combination.")
+        if len(items) != len(set(items)):
+            raise serializers.ValidationError("A product can only appear once in the estimate.")
+        return ", ".join(items)
     productWeight = serializers.DecimalField(max_digits=10, decimal_places=3, min_value=0, required=False, default=0)
     ownerLessWastage = serializers.DecimalField(max_digits=7, decimal_places=4, min_value=0, required=False, default=0)
     ownerLessAmountDeduction = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, default=0)
     goldRate = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, default=0)
+    invoiceAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    gst = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    rAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    oldGoldPayment = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    cashReceived = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    digitalPayment = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    chitAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    oldOrnament = serializers.DecimalField(max_digits=18, decimal_places=3, required=False, default=0)
+    oldKDye = serializers.DecimalField(max_digits=18, decimal_places=3, required=False, default=0)
+    oldOtherDye = serializers.DecimalField(max_digits=18, decimal_places=3, required=False, default=0)
+    oldValue = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
+    remarks = serializers.CharField(max_length=500, allow_blank=True, required=False, default="No Remarks")
+
+
+class GoldEstimateMultipleInputSerializer(serializers.Serializer):
+    date = serializers.DateField(input_formats=["%Y-%m-%d"])
+    time = serializers.TimeField(input_formats=["%H:%M:%S", "%H:%M"])
+    kPadNo = serializers.CharField(max_length=50, allow_blank=True, required=False, default="")
+    products = serializers.ListField(
+        child=serializers.ChoiceField(choices=GOLD_PRODUCT_CHOICES),
+        min_length=1,
+        max_length=50,
+    )
     invoiceAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
     gst = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)
     rAmount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False, default=0)

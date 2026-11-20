@@ -55,6 +55,7 @@
                     <label>Supplier</label>
                     <select name="supplier" class="form-control" onchange="this.form.submit()" required>
                         <option value="">Select</option>
+                        <option value="ALL" {% if selectedSupplier == "ALL" %}selected{% endif %}>ALL</option>
                         {% for s in uniqueSuppliers %}
                             <option value="{{ s }}" {% if s == selectedSupplier %}selected{% endif %}>
                                 {{ s }}

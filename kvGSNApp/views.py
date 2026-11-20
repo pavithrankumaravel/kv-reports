@@ -473,9 +473,9 @@ def gsnSupplierWiseSaleReport(request):
 
     # ------------------ NORMALIZE DATA ------------------
     data = [{
-        "Supplier": r[1],
-        "Product": r[2],
-        "SubProduct": r[3],
+        "Supplier": r[1].strip() if isinstance(r[1], str) else r[1],
+        "Product": r[2].strip() if isinstance(r[2], str) else r[2],
+        "SubProduct": r[3].strip() if isinstance(r[3], str) else r[3],
         "TagNo": r[4],
         "GrossWt": r[5],
         "Pieces": r[6],
@@ -487,7 +487,10 @@ def gsnSupplierWiseSaleReport(request):
     unique_products = []
     if selected_supplier:
         unique_products = sorted(
-            set(d["Product"] for d in data if d["Supplier"] == selected_supplier)
+            set(
+                d["Product"] for d in data
+                if d["Product"] and (selected_supplier == "ALL" or d["Supplier"] == selected_supplier)
+            )
         )
 
     # ------------------ TABLE DATA ------------------
@@ -499,7 +502,7 @@ def gsnSupplierWiseSaleReport(request):
 
         for d in data:
             if (
-                d["Supplier"] == selected_supplier and
+                (selected_supplier == "ALL" or d["Supplier"] == selected_supplier) and
                 d["Product"] == selected_product
             ):
                 # Counting Pieces (better for Sales)
@@ -512,7 +515,7 @@ def gsnSupplierWiseSaleReport(request):
             })
 
     # ------------------ RENDER ------------------
-    return render(request, 'GSN/gsnSupplierWiseSaleReportOld.html', {
+    return render(request, 'GSN/gsnSupplierWiseSaleReport.html', {
         'currentDateTime': formatted_time,
         'uniqueSuppliers': unique_suppliers,
         'uniqueProducts': unique_products,

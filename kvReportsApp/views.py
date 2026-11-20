@@ -1578,6 +1578,12 @@ def goldEstimateForm(request):
         'currentDateTime': formatted_time,
     })
 
+
+def goldEstimateMultipleForm(request):
+    return render(request, 'goldEstimateMultipleForm.html', {
+        "apiUrl": reverse("goldEstimateMultipleCreateApi"),
+    })
+
 def silverEstimateForm(request):
     indian_zone = ZoneInfo("Asia/Kolkata")
     current_datetime = datetime.now(indian_zone)

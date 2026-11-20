@@ -444,8 +444,8 @@ def tkgSupplierWiseSaleReport(request):
 
     saleReport = [{
         "TranDate": r[0],
-        "Supplier": r[1],
-        "Product": r[2],
+        "Supplier": r[1].strip() if isinstance(r[1], str) else r[1],
+        "Product": r[2].strip() if isinstance(r[2], str) else r[2],
         "SubProduct": r[3],
         "GrossWt": r[4],
         "TagNo": r[5],
@@ -501,12 +501,17 @@ def tkgSupplierWiseSaleReport(request):
     data = unique_data
 
     # ------------------ FILTER DROPDOWNS ------------------
-    unique_suppliers = sorted(set(d["Supplier"] for d in data if d["Supplier"]))
+    # Keep filter choices based on the date-filtered sales, even if tag
+    # reconciliation removes a row from the final report data.
+    unique_suppliers = sorted(set(d["Supplier"] for d in saleReport if d["Supplier"]))
 
     unique_products = []
     if selected_supplier:
         unique_products = sorted(
-            set(d["Product"] for d in data if d["Supplier"] == selected_supplier)
+            set(
+                d["Product"] for d in saleReport
+                if d["Product"] and (selected_supplier == "ALL" or d["Supplier"] == selected_supplier)
+            )
         )
 
     # ------------------ SHOW TABLE ------------------
@@ -518,7 +523,7 @@ def tkgSupplierWiseSaleReport(request):
     if show_table:
         filtered = [
             d for d in data
-            if d["Supplier"] == selected_supplier
+            if (selected_supplier == "ALL" or d["Supplier"] == selected_supplier)
             and d["Product"] == selected_product
             and d["GrossWt"] not in (None, '')
             and str(d["GrossWt"]).replace('.', '', 1).isdigit()
